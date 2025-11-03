@@ -19,6 +19,137 @@ knitr::include_graphics("./portada.png")
 
 # 1. Introducción
 
-```{r}
+## 1.1 Obtención de los datos
+
+## 1.2 Metodología
+
+El objetivo de este estudio es analizar los factores que influyen tanto en el precio de compra de las viviendas como en la decisión de compra de los clientes, utilizando el dataset *Global House Purchase Decision Dataset* (Kaggle, 2025).
+
+# 2. Análisis exploratorio de los datos
+
+## 2.1 Importar datos y librerías
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(corrplot)
+
 data <- read.csv('./global_house_purchase_dataset.csv')
+glimpse(data)
+```
+
+- ¿Hay valores faltantes?
+```{r}
+sum(is.na(data))
+```
+
+## 2.2 Resumen estadístico general
+```{r}
+data %>%
+  select_if(is.numeric) %>%
+  summary()
+```
+
+## 2.3 Distribución del precio
+```{r}
+ggplot(data, aes(x = price)) +
+  geom_histogram(fill = "#69b3a2", color = "white", bins = 40) +
+  scale_x_continuous() +
+  labs(title = "Distribución del precio de las viviendas",
+  x = "Precio (USD)", y = "Frecuencia") +
+  theme_minimal()
+```
+
+## 2.4 Precio medio por país y tipo de propiedad
+```{r}
+# Precio medio por país (mostrando los 10 con más observaciones)
+top_countries <- data %>%
+    count(country, sort = TRUE) %>%
+    slice_head(n = 10) %>%
+    pull(country)
+
+data %>%
+    filter(country %in% top_countries) %>%
+    group_by(country) %>%
+    summarise(mean_price = mean(price, na.rm = TRUE)) %>%
+    ggplot(aes(x = reorder(country, mean_price), y = mean_price)) +
+    geom_col(fill = "#0072B2") +
+    coord_flip() +
+    scale_y_continuous() +
+    labs(title = "Precio medio por país",
+         x = "País", y = "Precio medio (USD)") +
+    theme_minimal()
+
+# Precio medio por tipo de propiedad
+
+data %>%
+  group_by(property_type) %>%
+  summarise(mean_price = mean(price, na.rm = TRUE)) %>%
+  ggplot(aes(x = reorder(property_type, mean_price), y = mean_price)) +
+  geom_col(fill = "#E69F00") +
+  coord_flip() +
+  scale_y_continuous() +
+  labs(title = "Precio medio por tipo de propiedad",
+  x = "Tipo de propiedad", y = "Precio medio (USD)") +
+  theme_minimal()
+```
+
+## 2.5 Relaciones entre variables numéricas
+```{r}
+# Seleccionar variables numéricas relevantes
+
+num_vars <- data %>%
+  select_if(is.numeric) %>%
+  select(-property_id)
+
+# Matriz de correlación
+
+corr_matrix <- cor(num_vars)
+
+corrplot(corr_matrix, method = "color", type = "upper", tl.col = "black", order = "hclust")
+```
+
+## 2.6 Relaciones bivariantes
+```{r}
+# Salario del cliente vs Decisión de compra
+data %>%
+  mutate(decision = factor(decision, labels = c("No compra", "Compra"))) %>%
+  ggplot(aes(x = decision, y = customer_salary, fill = decision)) +
+  geom_boxplot(outlier.alpha = 0.2) +
+  scale_y_continuous() +
+  scale_fill_manual(values = c("#F8766D", "#00BA38")) +
+  labs(title = "Salario del cliente según decisión de compra",
+  x = "Decisión", y = "Salario del cliente") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+```{r}
+# Número de crímenes reportados vs Precio medio
+data %>%
+  group_by(crime_cases_reported) %>%
+  summarise(mean_price = mean(price, na.rm = TRUE)) %>%
+  ggplot(aes(x = factor(crime_cases_reported), y = mean_price)) +
+  geom_col(fill = "#56B4E9") +
+  scale_y_continuous() +
+  labs(title = "Precio medio según el número de crímenes reportados",
+  x = "Número de crímenes", y = "Precio medio (USD)") +
+  theme_minimal()
+```
+
+## 2.7 Decisión de compra por país
+```{r}
+# ¿Qué porcentaje de personas toma la decisión de comprar una vivienda en cada país?
+data %>%
+  group_by(country) %>%
+  summarise(pct_purchase = mean(decision) * 100) %>%
+  arrange(desc(pct_purchase)) %>%
+  slice_head(n = 10) %>%
+  ggplot(aes(x = reorder(country, pct_purchase), y = pct_purchase)) +
+  geom_col(fill = "#009E73") +
+  coord_flip() +
+  labs(title = "Porcentaje de decisión de compra por país (Top 10)",
+  x = "País", y = "% de compras") +
+  theme_minimal()
 ```
