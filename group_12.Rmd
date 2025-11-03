@@ -1,0 +1,24 @@
+---
+title: "Análisis de los factores que influyen en la decisión de compra de vivienda a nivel internacional"
+author: "Ander Castro & Lucas Martinez"
+date: "2025-11-06"
+output:
+  cleanrmd::html_document_clean:
+    theme: kacit
+    toc: true
+    toc_depth: 5
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+link-citations: true
+---
+
+```{r, echo=FALSE, out.width="100%", fig.align="center"}
+knitr::include_graphics("./portada.png")
+```
+
+# 1. Introducción
+
+```{r}
+data <- read.csv('./global_house_purchase_dataset.csv')
+```
