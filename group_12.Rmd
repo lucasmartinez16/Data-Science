@@ -18,12 +18,61 @@ knitr::include_graphics("./portada.png")
 ```
 
 # 1. Introducción
+La compra de vivienda es uno de los procesos financieros más importantes para los individuos y familias en todo el mundo. Para la mayoría de compradores, esta adquisición se realiza a través de un préstamo hipotecario, por lo que las instituciones financieras evalúan múltiples factores para determinar si un solicitante es elegible para un crédito y bajo qué condiciones.
+
+El mercado inmobiliario global es un sector clave en la economía, moviendo miles de millones de dólares anualmente. La correcta evaluación del perfil financiero del comprador, junto con las características del inmueble, es fundamental tanto para garantizar el acceso a la vivienda como para reducir el riesgo económico de las entidades financieras.
 
 ## 1.1 Obtención de los datos
+El set de datos fue obtenido de la plataforma Kaggle y contiene información global sobre compras de vivienda y decisiones de aprobación hipotecaria. Incluye 200,000 registros (muestras) con 25 variables relacionadas tanto con la propiedad como con el comprador y su historial financiero.
+
+El objetivo principal de este estudio es realizar un análisis estadístico para comprender qué factores influyen en la aprobación o rechazo de un préstamo hipotecario. Asimismo, se buscará identificar qué características del comprador y de la propiedad tienen mayor peso en la decisión final y desarrollar modelos predictivos que permitan anticipar el resultado de aprobación crediticia.
 
 ## 1.2 Metodología
 
-El objetivo de este estudio es analizar los factores que influyen tanto en el precio de compra de las viviendas como en la decisión de compra de los clientes, utilizando el dataset *Global House Purchase Decision Dataset* (Kaggle, 2025).
+El análisis se llevará a cabo en dos fases principales:
+
+### **Volumen 1: Análisis Exploratorio y Estadístico**
+1. Importación de librerías y datos  
+2. Limpieza y preprocesamiento  
+3. Visualización de datos  
+4. PCA: Análisis de Componentes Principales  
+    - Varianza explicada  
+    - Componentes principales  
+5. Evaluación de normalidad  
+    - Gráficos de distribución  
+    - Test estadísticos  
+
+### **Volumen 2: Machine Learning**
+6. Modelo lineal para predicción de probabilidad de aprobación  
+7. Regresión logística para clasificación (aprobado vs no aprobado)  
+8. Modelos con selección de variables (T-test, criterio de varianza)  
+9. Modelos avanzados  
+    - Árboles de decisión  
+    - Random Forest  
+    - SVM  
+10. Conclusiones  
+11. Referencias  
+
+---
+
+
+## 1.3 Variables del dataset
+El dataset incluye 200,000 registros con información sobre propiedades y compradores.
+En total hay 25 variables, pero a continuación se presentan las variables más relevantes:
+| Variable                             | Significado                        |
+| ------------------------------------ | ---------------------------------- |
+| `price`                              | Precio de la vivienda              |
+| `property_type`, `furnishing_status` | Tipo y nivel de amueblado          |
+| `property_size_sqft`                 | Tamaño del inmueble                |
+| `country`, `city`                    | Ubicación geográfica               |
+| `customer_salary`                    | Salario anual del comprador        |
+| `credit_score`                       | Puntaje crediticio                 |
+| `loan_amount`, `loan_tenure_years`   | Monto y duración del préstamo      |
+| `monthly_expenses`                   | Gastos mensuales                   |
+| `previous_loans`, `missed_payments`  | Historial financiero               |
+| `crime_cases_reported`               | Seguridad del entorno              |
+| `decision`                           | 1 = Compra aprobada, 0 = No compra |
+
 
 # 2. Análisis exploratorio de los datos
 
