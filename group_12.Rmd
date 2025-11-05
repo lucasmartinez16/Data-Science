@@ -29,49 +29,68 @@ El objetivo principal de este estudio es realizar un análisis estadístico para
 
 ## 1.2 Metodología
 
+A lo largo de este trabajo, se pretenden analizar las siguientes preguntas:
+
+- *¿Qué variables explican mejor el precio de una vivienda?*
+  - ¿Influyen el país, tipo de propiedad, tamaño, número de habitaciones o el estado de
+  mobiliario?
+  - ¿Qué relación existe entre el precio y variables como el salario del comprador, el
+  número de propietarios anteriores o el año de construcción?
+  
+- *¿Qué factores determinan la decisión de compra (variable decision)?*
+  - ¿Qué peso tienen variables como el ratio EMI/income, el nivel de satisfacción
+  (satisfaction_score), el rating del vecindario (neighbourhood_rating) o la conectividad
+  (connectivity_score)?
+  - ¿Se puede predecir la decisión de compra con un modelo de clasificación?
+  
+- *¿Existen diferencias significativas entre países o ciudades en cuanto a precios y decisiones de compra?*
+  - ¿Qué países tienen precios más altos en promedio?
+  - ¿Hay diferencias en la tasa de compra (decision = 1) entre regiones?
+
+- *¿Cómo se distribuye el precio de las viviendas y hasta qué punto es posible predecirlo con modelos estadísticos y de machine learning?*
+  - ¿Se ajusta a una distribución teórica conocida (gamma, log-normal, normal)?
+  - ¿Qué modelo de regresión (lineal, regularizado o de machine learning) ofrece mejor
+  rendimiento en la predicción del precio?
+  - ¿Qué variables son más relevantes en la estimación?
+  
+- *¿Qué insights se pueden extraer sobre el perfil del comprador?*
+  - ¿Qué relación hay entre salario, gastos mensuales, préstamo y decisión de compra?
+  - ¿Influyen los aspectos legales (legal_cases_on_property) o de seguridad
+  (crime_cases_reported)?
+
 El análisis se llevará a cabo en dos fases principales:
 
-### **Volumen 1: Análisis Exploratorio y Estadístico**
+### Volumen 1: Análisis Exploratorio y Estadístico
 1. Importación de librerías y datos  
 2. Limpieza y preprocesamiento  
-3. Visualización de datos  
-4. PCA: Análisis de Componentes Principales  
+3. Visualización de datos
+4. Contraste de hipótesis y estadística inferencial
+5. PCA: Análisis de Componentes Principales  
     - Varianza explicada  
-    - Componentes principales  
-5. Evaluación de normalidad  
-    - Gráficos de distribución  
-    - Test estadísticos  
+    - Componentes principales
 
-### **Volumen 2: Machine Learning**
-6. Modelo lineal para predicción de probabilidad de aprobación  
-7. Regresión logística para clasificación (aprobado vs no aprobado)  
-8. Modelos con selección de variables (T-test, criterio de varianza)  
-9. Modelos avanzados  
-    - Árboles de decisión  
-    - Random Forest  
-    - SVM  
-10. Conclusiones  
-11. Referencias  
-
----
-
+### Volumen 2: Machine Learning
+6. Modelo para la decisión de compra (clasificación)  
+7. Modelo para el precio de la vivienda  
+8. Interpretación de resultados
+9. Conclusiones y limitaciones
+10. Referencias  
 
 ## 1.3 Variables del dataset
 El dataset incluye 200,000 registros con información sobre propiedades y compradores.
 En total hay 25 variables, pero a continuación se presentan las variables más relevantes:
-| Variable                             | Significado                        |
-| ------------------------------------ | ---------------------------------- |
-| `price`                              | Precio de la vivienda              |
-| `property_type`, `furnishing_status` | Tipo y nivel de amueblado          |
-| `property_size_sqft`                 | Tamaño del inmueble                |
-| `country`, `city`                    | Ubicación geográfica               |
-| `customer_salary`                    | Salario anual del comprador        |
-| `credit_score`                       | Puntaje crediticio                 |
-| `loan_amount`, `loan_tenure_years`   | Monto y duración del préstamo      |
-| `monthly_expenses`                   | Gastos mensuales                   |
-| `previous_loans`, `missed_payments`  | Historial financiero               |
-| `crime_cases_reported`               | Seguridad del entorno              |
-| `decision`                           | 1 = Compra aprobada, 0 = No compra |
+
+  - `price`: Precio de la vivienda
+  - `property_type`, `furnishing_status`: Tipo y nivel de amueblado        
+  - `property_size_sqft`: Tamaño del inmueble              
+  - `country`, `city`: Ubicación geográfica             
+  - `customer_salary`: Salario anual del comprador      
+  - `credit_score`: Puntaje crediticio               
+  - `loan_amount`, `loan_tenure_years`: Monto y duración del préstamo    
+  - `monthly_expenses`: Gastos mensuales                 
+  - `previous_loans`, `missed_payments`: Historial financiero             
+  - `crime_cases_reported`: Seguridad del entorno            
+  - `decision`: 1 = Compra aprobada, 0 = No compra
 
 
 # 2. Análisis exploratorio de los datos
