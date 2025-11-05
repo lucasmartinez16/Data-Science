@@ -60,21 +60,21 @@ A lo largo de este trabajo, se pretenden analizar las siguientes preguntas:
 
 El análisis se llevará a cabo en dos fases principales:
 
-### Volumen 1: Análisis Exploratorio y Estadístico
+### **Volumen 1: Análisis Exploratorio y Estadístico**
 1. Importación de librerías y datos  
-2. Limpieza y preprocesamiento  
+2. Resumen estadístico general 
 3. Visualización de datos
 4. Contraste de hipótesis y estadística inferencial
 5. PCA: Análisis de Componentes Principales  
     - Varianza explicada  
     - Componentes principales
 
-### Volumen 2: Machine Learning
+### **Volumen 2: Machine Learning**
 6. Modelo para la decisión de compra (clasificación)  
 7. Modelo para el precio de la vivienda  
 8. Interpretación de resultados
 9. Conclusiones y limitaciones
-10. Referencias  
+10. Referencias
 
 ## 1.3 Variables del dataset
 El dataset incluye 200,000 registros con información sobre propiedades y compradores.
@@ -102,14 +102,16 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(corrplot)
+library(scales)
 
 data <- read.csv('./global_house_purchase_dataset.csv')
 glimpse(data)
 ```
 
-- ¿Hay valores faltantes?
+- ¿Hay valores faltantes? ¿Y duplicados?
 ```{r}
 sum(is.na(data))
+sum(duplicated(data))
 ```
 
 ## 2.2 Resumen estadístico general
@@ -118,52 +120,81 @@ data %>%
   select_if(is.numeric) %>%
   summary()
 ```
+```{r}
+sapply(data %>% select(where(is.character)), n_distinct)
+```
 
-## 2.3 Distribución del precio
+## 2.3 Visualización de datos
+
+### **Distribución de la variable `decision`**
+```{r}
+data %>%
+  count(decision) %>%
+  mutate(pct = n/sum(n)*100,
+         decision = factor(decision, labels = c("No compra", "Compra"))) %>%
+  ggplot(aes(x = decision, y = pct, fill = decision)) +
+  geom_col() +
+  labs(title = "Distribución de la decisión de compra",
+       x = "Decisión", y = "%") +
+  scale_fill_manual(values = c("#F8766D", "#00BA38")) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+### **Distribución del precio**
 ```{r}
 ggplot(data, aes(x = price)) +
   geom_histogram(fill = "#69b3a2", color = "white", bins = 40) +
-  scale_x_continuous() +
+  scale_x_continuous(labels = comma) +
   labs(title = "Distribución del precio de las viviendas",
   x = "Precio (USD)", y = "Frecuencia") +
   theme_minimal()
 ```
 
-## 2.4 Precio medio por país y tipo de propiedad
+En este histograma podemos ver cómo el precio sigue una distribución parecida a una gamma. Ahora vamos a ver si aplicando una transformación logarítmica, obtenemos una distribución más parecida a una normal.
+
 ```{r}
-# Precio medio por país (mostrando los 10 con más observaciones)
+ggplot(data, aes(x = log(price))) +
+  geom_histogram(fill = "#69b3a2", color = "white", bins = 40) +
+  scale_x_continuous() +
+  labs(title = "Distribución del logaritmo del precio de las viviendas",
+  x = "Precio (USD)", y = "Frecuencia") +
+  theme_minimal()
+```
+
+### **Distribución del precio por país y por tipo de propiedad**
+```{r}
+# Mostrando los 10 países con más observaciones
 top_countries <- data %>%
     count(country, sort = TRUE) %>%
     slice_head(n = 10) %>%
     pull(country)
 
+# Boxplot de precios por país
 data %>%
-    filter(country %in% top_countries) %>%
-    group_by(country) %>%
-    summarise(mean_price = mean(price, na.rm = TRUE)) %>%
-    ggplot(aes(x = reorder(country, mean_price), y = mean_price)) +
-    geom_col(fill = "#0072B2") +
-    coord_flip() +
-    scale_y_continuous() +
-    labs(title = "Precio medio por país",
-         x = "País", y = "Precio medio (USD)") +
-    theme_minimal()
-
-# Precio medio por tipo de propiedad
-
-data %>%
-  group_by(property_type) %>%
-  summarise(mean_price = mean(price, na.rm = TRUE)) %>%
-  ggplot(aes(x = reorder(property_type, mean_price), y = mean_price)) +
-  geom_col(fill = "#E69F00") +
+  filter(country %in% top_countries) %>%
+  ggplot(aes(x = country, y = price)) +
+  geom_boxplot(fill = "#56B4E9", outlier.alpha = 0.2) +
   coord_flip() +
-  scale_y_continuous() +
-  labs(title = "Precio medio por tipo de propiedad",
-  x = "Tipo de propiedad", y = "Precio medio (USD)") +
+  scale_y_continuous(labels = comma) +
+  labs(title = "Distribución del precio por país (Top 10)",
+       x = "País", y = "Precio (USD)") +
+  theme_minimal()
+
+# Boxplot de precios por tipo de propiedad
+
+data %>%
+  filter(country %in% top_countries) %>%
+  ggplot(aes(x = property_type, y = price)) +
+  geom_boxplot(fill = "#56B4E9", outlier.alpha = 0.2) +
+  scale_y_continuous(labels = comma) +
+  coord_flip() +
+  labs(title = "Distribución del precio por tipo de propiedad (Top 10)",
+       x = "Propiedad", y = "Precio (USD)") +
   theme_minimal()
 ```
 
-## 2.5 Relaciones entre variables numéricas
+### **Relaciones entre variables numéricas**
 ```{r}
 # Seleccionar variables numéricas relevantes
 
@@ -178,16 +209,15 @@ corr_matrix <- cor(num_vars)
 corrplot(corr_matrix, method = "color", type = "upper", tl.col = "black", order = "hclust")
 ```
 
-## 2.6 Relaciones bivariantes
+### **Relaciones bivariantes**
 ```{r}
-# Salario del cliente vs Decisión de compra
+# Salario vs Decisión de compra
 data %>%
   mutate(decision = factor(decision, labels = c("No compra", "Compra"))) %>%
   ggplot(aes(x = decision, y = customer_salary, fill = decision)) +
   geom_boxplot(outlier.alpha = 0.2) +
-  scale_y_continuous() +
   scale_fill_manual(values = c("#F8766D", "#00BA38")) +
-  labs(title = "Salario del cliente según decisión de compra",
+  labs(title = "Salario según decisión de compra",
   x = "Decisión", y = "Salario del cliente") +
   theme_minimal() +
   theme(legend.position = "none")
@@ -200,13 +230,13 @@ data %>%
   summarise(mean_price = mean(price, na.rm = TRUE)) %>%
   ggplot(aes(x = factor(crime_cases_reported), y = mean_price)) +
   geom_col(fill = "#56B4E9") +
-  scale_y_continuous() +
+  scale_y_continuous(labels = comma) +
   labs(title = "Precio medio según el número de crímenes reportados",
   x = "Número de crímenes", y = "Precio medio (USD)") +
   theme_minimal()
 ```
 
-## 2.7 Decisión de compra por país
+### **Decisión de compra por país**
 ```{r}
 # ¿Qué porcentaje de personas toma la decisión de comprar una vivienda en cada país?
 data %>%
@@ -220,4 +250,53 @@ data %>%
   labs(title = "Porcentaje de decisión de compra por país (Top 10)",
   x = "País", y = "% de compras") +
   theme_minimal()
+```
+
+# 3. Contraste de hipótesis y estadística inferencial
+
+En esta sección se pretende verificar estadísticamente algunas de las relaciones sugeridas en el análisis exploratorio previo. Para ello, se formulan hipótesis estadísticas y se aplican pruebas de contraste adecuadas según el tipo de variable y la distribución observada.
+
+## 3.1 Relación entre tamaño de vivienda y precio
+
+Hipótesis:
+
+- H0: No existe relación lineal significativa entre tamaño (property_size_sqft) y precio (price).
+- H1: Existe una relación lineal significativa.
+
+```{r}
+# Correlación de Pearson
+
+cor.test(data$property_size_sqft, data$price)
+
+# Modelo de regresión lineal
+
+model_size_price <- lm(log(price) ~ property_size_sqft, data = data)
+summary(model_size_price)
+```
+
+## 3.2 Diferencias de precio entre países
+
+Hipótesis:
+
+- H0: El precio medio es igual entre los países.
+- H1: Al menos un país presenta un precio medio distinto.
+
+```{r}
+# ANOVA precio ~ país (solo países con suficiente representación)
+
+anova_data <- data %>% filter(country %in% top_countries)
+kruskal.test(price ~ country, data = anova_data)
+```
+
+## 3.3 Salario y decisión de compra
+
+Hipótesis:
+
+- H0: No hay diferencia en salario medio entre quienes compran y quienes no.
+- H1: El salario medio difiere según la decisión de compra.
+
+```{r}
+data$decision_f <- factor(data$decision, labels = c("No compra", "Compra"))
+
+t.test(customer_salary ~ decision_f, data = data)
 ```
