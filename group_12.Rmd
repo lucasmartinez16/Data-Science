@@ -103,6 +103,8 @@ library(ggplot2)
 library(tidyr)
 library(corrplot)
 library(scales)
+library(broom)
+library(car)
 
 data <- read.csv('./global_house_purchase_dataset.csv')
 glimpse(data)
@@ -134,6 +136,8 @@ data %>%
          decision = factor(decision, labels = c("No compra", "Compra"))) %>%
   ggplot(aes(x = decision, y = pct, fill = decision)) +
   geom_col() +
+  geom_text(aes(label = sprintf("%.2f%%", pct)), 
+            vjust = 1.5, color = "black", size = 4) +
   labs(title = "Distribución de la decisión de compra",
        x = "Decisión", y = "%") +
   scale_fill_manual(values = c("#F8766D", "#00BA38")) +
@@ -154,7 +158,9 @@ ggplot(data, aes(x = price)) +
 En este histograma podemos ver cómo el precio sigue una distribución parecida a una gamma. Ahora vamos a ver si aplicando una transformación logarítmica, obtenemos una distribución más parecida a una normal.
 
 ```{r}
-ggplot(data, aes(x = log(price))) +
+data <- data %>% mutate(log_price = log(price))
+
+ggplot(data, aes(x = log_price)) +
   geom_histogram(fill = "#69b3a2", color = "white", bins = 40) +
   scale_x_continuous() +
   labs(title = "Distribución del logaritmo del precio de las viviendas",
@@ -164,15 +170,8 @@ ggplot(data, aes(x = log(price))) +
 
 ### **Distribución del precio por país y por tipo de propiedad**
 ```{r}
-# Mostrando los 10 países con más observaciones
-top_countries <- data %>%
-    count(country, sort = TRUE) %>%
-    slice_head(n = 10) %>%
-    pull(country)
-
 # Boxplot de precios por país
 data %>%
-  filter(country %in% top_countries) %>%
   ggplot(aes(x = country, y = price)) +
   geom_boxplot(fill = "#56B4E9", outlier.alpha = 0.2) +
   coord_flip() +
@@ -184,7 +183,6 @@ data %>%
 # Boxplot de precios por tipo de propiedad
 
 data %>%
-  filter(country %in% top_countries) %>%
   ggplot(aes(x = property_type, y = price)) +
   geom_boxplot(fill = "#56B4E9", outlier.alpha = 0.2) +
   scale_y_continuous(labels = comma) +
@@ -246,6 +244,8 @@ data %>%
   slice_head(n = 10) %>%
   ggplot(aes(x = reorder(country, pct_purchase), y = pct_purchase)) +
   geom_col(fill = "#009E73") +
+  geom_text(aes(label = sprintf("%.2f%%", pct_purchase)), 
+            hjust = 1.2, color = "white", size = 4) +
   coord_flip() +
   labs(title = "Porcentaje de decisión de compra por país (Top 10)",
   x = "País", y = "% de compras") +
@@ -256,25 +256,7 @@ data %>%
 
 En esta sección se pretende verificar estadísticamente algunas de las relaciones sugeridas en el análisis exploratorio previo. Para ello, se formulan hipótesis estadísticas y se aplican pruebas de contraste adecuadas según el tipo de variable y la distribución observada.
 
-## 3.1 Relación entre tamaño de vivienda y precio
-
-Hipótesis:
-
-- H0: No existe relación lineal significativa entre tamaño (property_size_sqft) y precio (price).
-- H1: Existe una relación lineal significativa.
-
-```{r}
-# Correlación de Pearson
-
-cor.test(data$property_size_sqft, data$price)
-
-# Modelo de regresión lineal
-
-model_size_price <- lm(log(price) ~ property_size_sqft, data = data)
-summary(model_size_price)
-```
-
-## 3.2 Diferencias de precio entre países
+## 3.1 Diferencias de precio entre países
 
 Hipótesis:
 
@@ -282,21 +264,79 @@ Hipótesis:
 - H1: Al menos un país presenta un precio medio distinto.
 
 ```{r}
-# ANOVA precio ~ país (solo países con suficiente representación)
-
-anova_data <- data %>% filter(country %in% top_countries)
-kruskal.test(price ~ country, data = anova_data)
+# Test de normalidad
+shapiro.test(sample(data$log_price, 5000))
 ```
 
-## 3.3 Salario y decisión de compra
+El test de Shapiro-Wilk aplicado a una muestra aleatoria de log(price) muestra un p-value < 2.2e-16, indicando que la variable transformada no sigue una distribución normal perfecta. Sin embargo, dado el gran tamaño muestral, el ANOVA es robusto frente a desviaciones de normalidad.
 
-Hipótesis:
-
-- H0: No hay diferencia en salario medio entre quienes compran y quienes no.
-- H1: El salario medio difiere según la decisión de compra.
+A continuación, se realiza la prueba de Levene para ver si las varianzas entre países son homogéneas o no, y esto nos indicará si podemos utilizar el test paramétrico de ANOVA o, en caso contrario, el de Kruskal-Wallis.
 
 ```{r}
-data$decision_f <- factor(data$decision, labels = c("No compra", "Compra"))
-
-t.test(customer_salary ~ decision_f, data = data)
+# Test de homogeneidad de varianzas
+leveneTest(log_price ~ factor(country), data = data)
 ```
+
+Antes de realizar el contraste de medias entre países, se evaluó la homogeneidad de varianzas mediante el test de Levene sobre log(price). El resultado (p = 0.126) indica que no existe evidencia suficiente para rechazar la igualdad de varianzas, por lo que se cumple el supuesto de homocedasticidad.
+Por ello, se aplicó un ANOVA clásico para comparar el precio medio entre países usando la variable transformada.
+
+```{r}
+# ANOVA
+anova_country <- aov(log_price ~ factor(country), data = data)
+summary(anova_country)
+```
+
+El ANOVA resultó significativo (p < 2e-16), lo que indica diferencias en los precios medios entre países.
+Posteriormente, se realizó el test de Tukey para ver qué países difieren entre sí en el precio medio.
+
+Este test de Tukey incluye una corrección automática del error familiar (FWER), garantizando que la probabilidad de obtener falsos positivos se mantenga controlada al realizar múltiples comparaciones simultáneas.
+
+```{r}
+# Post-hoc Tukey
+tukey <- TukeyHSD(anova_country)
+sum(tukey[["factor(country)"]][, "p adj"]>0.05)
+```
+
+El test post-hoc de Tukey mostró diferencias significativas entre todos los pares de países (p < 0.001), confirmando que el país de localización es un factor determinante en el precio de la vivienda.
+
+## 3.2 Factores que influyen en la decisión de compra
+
+```{r}
+data$decision <- as.factor(data$decision)
+
+model1 <- glm(decision ~ log_price + factor(country) +
+                satisfaction_score + bathrooms + rooms +
+                previous_owners, data
+              = data, family = binomial)
+
+summary(model1)
+```
+
+```{r}
+coef_plot <- tidy(model1) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(signif = ifelse(p.value < 0.05, "*", ""),
+         term = paste0(term, signif),
+         term = reorder(term, estimate))
+
+ggplot(coef_plot, aes(x = term, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = estimate - std.error, ymax =
+                      estimate + std.error),
+                width = 0.2) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Efecto de las variables en la probabilidad de
+       compra",
+       x = "Variables", y = "Coeficiente")
+```
+
+El modelo de regresión logística muestra que la decisión de compra está influida principalmente por el precio de la vivienda (en su escala logarítmica), el país donde se ubica el inmueble y el nivel de satisfacción del comprador. En particular, se observa que el coeficiente de log_price es negativo y altamente significativo (p < .001), indicando que a medida que el precio aumenta, la probabilidad de que el comprador decida adquirir la vivienda disminuye. Esto sugiere que la capacidad económica es un factor limitante importante en la decisión.
+
+La variable satisfaction_score presenta un efecto positivo y muy significativo (p < .001), lo que implica que un mayor nivel de satisfacción subjetiva aumenta notablemente la probabilidad de compra. Este resultado destaca el papel de la percepción personal y la valoración emocional del inmueble en la toma de decisiones, no solo factores económicos.
+
+También se identifican diferencias significativas entre países: compradores en Brasil, India, Sudáfrica, Singapur, Emiratos Árabes Unidos y Estados Unidos muestran probabilidades significativamente diferentes de compra respecto al país de referencia (Australia, por defecto). Esto sugiere que existen diferencias culturales, regulatorias o económicas entre mercados inmobiliarios internacionales que influyen en la decisión de compra.
+
+Por el contrario, variables relacionadas con características físicas del inmueble, como el número de habitaciones (rooms), el número de baños (bathrooms) y el número de propietarios anteriores (previous_owners), no muestran efectos significativos en la decisión de compra cuando se controlan el resto de factores. Esto indica que, en este contexto, las características estructurales parecen tener un papel menos determinante que la satisfacción percibida y el precio relativo.
+
+# 4. PCA: Análisis de Componentes Principales
