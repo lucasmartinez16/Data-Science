@@ -60,9 +60,8 @@ A lo largo de este trabajo, se pretenden analizar las siguientes preguntas:
   - ¿Influyen los aspectos legales (legal_cases_on_property) o de seguridad
   (crime_cases_reported)?
 
-El análisis se llevará a cabo en dos fases principales:
+El análisis se llevará a cabo de la siguiente manera:
 
-### **Volumen 1: Análisis Exploratorio y Estadístico**
 1. Importación de librerías y datos  
 2. Resumen estadístico general 
 3. Visualización de datos
@@ -70,13 +69,10 @@ El análisis se llevará a cabo en dos fases principales:
 5. PCA: Análisis de Componentes Principales  
     - Varianza explicada  
     - Componentes principales
-
-### **Volumen 2: Machine Learning**
-6. Modelo para la decisión de compra (clasificación)  
-7. Modelo para el precio de la vivienda  
-8. Interpretación de resultados
-9. Conclusiones y limitaciones
-10. Referencias
+6. Modelos de Machine Learning para la decisión de compra 
+7. Interpretación de resultados
+8. Conclusiones y limitaciones
+9. Bibliografía
 
 ## 1.3 Variables del dataset
 
@@ -122,6 +118,10 @@ library(corrplot)
 library(scales)
 library(broom)
 library(car)
+library(caret)
+library(randomForest)
+library(xgboost)
+library(pROC)
 
 data <- read.csv('./global_house_purchase_dataset.csv')
 glimpse(data)
@@ -358,46 +358,6 @@ sum(tukey[["factor(country)"]][, "p adj"]>0.05)
 
 El test post-hoc de Tukey mostró diferencias significativas entre todos los pares de países (p-value < 0.05), confirmando que el país de localización es un factor determinante en el precio de la vivienda.
 
-## 3.2 Factores que influyen en la decisión de compra
-
-```{r}
-data$decision <- as.factor(data$decision)
-
-model1 <- glm(decision ~ log_price + factor(country) +
-                satisfaction_score + bathrooms + rooms +
-                previous_owners, data
-              = data, family = binomial)
-
-summary(model1)
-```
-
-```{r}
-coef_plot <- tidy(model1) %>%
-  filter(term != "(Intercept)") %>%
-  mutate(signif = ifelse(p.value < 0.05, "*", ""),
-         term = paste0(term, signif),
-         term = reorder(term, estimate))
-
-ggplot(coef_plot, aes(x = term, y = estimate)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = estimate - std.error, ymax =
-                      estimate + std.error),
-                width = 0.2) +
-  coord_flip() +
-  theme_minimal() +
-  labs(title = "Efecto de las variables en la probabilidad de
-       compra",
-       x = "Variables", y = "Coeficiente")
-```
-
-El modelo de regresión logística muestra que la decisión de compra está influida principalmente por el precio de la vivienda (en su escala logarítmica), el país donde se ubica el inmueble y el nivel de satisfacción del comprador. En particular, se observa que el coeficiente de log_price es negativo y altamente significativo (p-value < 2e-16), lo que indica que, a medida que el precio aumenta, la probabilidad de que el comprador decida adquirir la vivienda disminuye. Este resultado sugiere que la capacidad económica es un factor limitante importante en la decisión.
-
-La variable satisfaction_score presenta un efecto positivo y muy significativo (p-value < 2e-16), implicando que un mayor nivel de satisfacción incrementa considerablemente la probabilidad de compra. Este resultado destaca el papel de la percepción personal y la valoración emocional del inmueble en la toma de decisiones, además de los factores económicos.
-
-En cuanto al país de residencia, se identifican diferencias significativas entre mercados. Los compradores en Brasil, India, Sudáfrica, Singapur, Emiratos Árabes Unidos y Estados Unidos presentan probabilidades de compra significativamente menores en comparación con el país de referencia (Australia).
-
-Por el contrario, variables relacionadas con las características físicas del inmueble —como el número de baños (`bathrooms`), de habitaciones (`rooms`) o de propietarios anteriores (`previous_owners`)— no muestran efectos estadísticamente significativos cuando se controlan las demás variables del modelo.
-
 # 4. PCA: Análisis de Componentes Principales
 
 El análisis de componentes principales (PCA) es clave para identificar los factores que explican la mayor parte de la variabilidad en nuestro conjunto de datos.
@@ -482,3 +442,184 @@ head(PC2_contrib_df, 5)
 PC1 está fuertemente asociado con el nivel económico y el tamaño de la propiedad. Las variables financieras (precio, cantidad de préstamo, pago inicial) y el tamaño del inmueble tienen cargas altas y positivas, lo que indica que este componente captura principalmente un gradiente de propiedades de mayor costo y mayor superficie frente a propiedades más económicas y pequeñas.
 
 PC2 está dominado casi exclusivamente por la estructura interna del inmueble (número de habitaciones y baños). Estos dos atributos se mueven prácticamente de forma conjunta y definen la configuración habitacional del inmueble, independientemente del precio total.
+
+# 5. Machine Learning: Modelos para predecir `decision`
+
+## 5.1 Regresión logística con Lasso y Cross-Validation
+
+```{r}
+data$decision <- as.factor(data$decision)
+
+model1 <- glm(decision ~ log_price + factor(country) +
+                satisfaction_score + bathrooms + rooms +
+                previous_owners, data
+              = data, family = binomial)
+
+summary(model1)
+```
+
+```{r}
+coef_plot <- tidy(model1) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(signif = ifelse(p.value < 0.05, "*", ""),
+         term = paste0(term, signif),
+         term = reorder(term, estimate))
+
+ggplot(coef_plot, aes(x = term, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = estimate - std.error, ymax =
+                      estimate + std.error),
+                width = 0.2) +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Efecto de las variables en la probabilidad de
+       compra",
+       x = "Variables", y = "Coeficiente")
+```
+
+El modelo de regresión logística muestra que la decisión de compra está influida principalmente por el precio de la vivienda (en su escala logarítmica), el país donde se ubica el inmueble y el nivel de satisfacción del comprador. En particular, se observa que el coeficiente de log_price es negativo y altamente significativo (p-value < 2e-16), lo que indica que, a medida que el precio aumenta, la probabilidad de que el comprador decida adquirir la vivienda disminuye. Este resultado sugiere que la capacidad económica es un factor limitante importante en la decisión.
+
+La variable satisfaction_score presenta un efecto positivo y muy significativo (p-value < 2e-16), implicando que un mayor nivel de satisfacción incrementa considerablemente la probabilidad de compra. Este resultado destaca el papel de la percepción personal y la valoración emocional del inmueble en la toma de decisiones, además de los factores económicos.
+
+En cuanto al país de residencia, se identifican diferencias significativas entre mercados. Los compradores en Brasil, India, Sudáfrica, Singapur, Emiratos Árabes Unidos y Estados Unidos presentan probabilidades de compra significativamente menores en comparación con el país de referencia (Australia).
+
+Por el contrario, variables relacionadas con las características físicas del inmueble —como el número de baños (`bathrooms`), de habitaciones (`rooms`) o de propietarios anteriores (`previous_owners`)— no muestran efectos estadísticamente significativos cuando se controlan las demás variables del modelo.
+
+## 5.2 Random Forest con GridSearch y Cross-Validation
+
+Vamos a seleccionar las variables relevantes.
+
+```{r message=FALSE, warning=FALSE}
+ml_data <- data %>%
+  select(decision, log_price, country, satisfaction_score,
+         neighbourhood_rating, connectivity_score,
+         emi_to_income_ratio, bathrooms, rooms,
+         previous_owners)
+
+ml_data$decision <- as.factor(ml_data$decision)
+ml_data$country <- as.factor(ml_data$country)
+
+# Dividir en train y test
+train_index <- createDataPartition(ml_data$decision, p = 0.8, list = FALSE)
+train <- ml_data[train_index, ]
+test  <- ml_data[-train_index, ]
+
+# Comprobar proporciones
+prop.table(table(train$decision))
+prop.table(table(test$decision))
+```
+A continuación, creamos y entrenamos nuestro modelo.
+
+```{r message=FALSE, warning=FALSE}
+train$decision <- factor(train$decision, levels = c(0,1), labels = c("No","Si"))
+test$decision  <- factor(test$decision,  levels = c(0,1), labels = c("No","Si"))
+
+dummies <- dummyVars(decision ~ ., data = train)
+train_x <- predict(dummies, newdata = train)
+test_x  <- predict(dummies, newdata = test)
+
+train_y <- ifelse(train$decision == "Si", 1, 0)
+test_y  <- ifelse(test$decision == "Si", 1, 0)
+
+dtrain <- xgb.DMatrix(data = as.matrix(train_x), label = train_y)
+dtest  <- xgb.DMatrix(data = as.matrix(test_x), label = test_y)
+```
+```{r eval=FALSE, message=FALSE, warning=FALSE}
+ctrl <- trainControl(
+  method = "cv",
+  number = 5,
+  classProbs = TRUE,
+  summaryFunction = twoClassSummary,
+  verboseIter = TRUE
+)
+
+grid <- expand.grid(
+  nrounds = seq(100, 500, by = 100),
+  max_depth = c(3, 5, 7),
+  eta = c(0.01, 0.05, 0.1),
+  gamma = 0,
+  colsample_bytree = c(0.6, 0.8),
+  min_child_weight = c(1, 3),
+  subsample = c(0.7, 1)
+)
+
+xgb_model <- train(
+  x = train_x,
+  y = train$decision,
+  method = "xgbTree",
+  metric = "ROC",
+  trControl = ctrl,
+  tuneGrid = grid
+)
+```
+```{r, include=FALSE}
+xgb_model <- readRDS("xgb_model_final.rds")
+```
+
+
+```{r message=FALSE, warning=FALSE}
+pred_prob <- predict(xgb_model, newdata = test_x, type = "prob")[, "Si"]
+pred_class <- ifelse(pred_prob > 0.5, "Si", "No")
+
+confusionMatrix(factor(pred_class), test$decision)
+
+roc_obj <- roc(test_y, pred_prob)
+
+roc_df <- data.frame(
+  specificity = roc_obj$specificities,
+  sensitivity = roc_obj$sensitivities
+)
+
+ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity)) +
+  geom_line(size = 1.2, color = "#1c61b6") +
+  geom_abline(linetype = "dashed", color = "gray50") +
+  theme_minimal() +
+  labs(title = paste("Curva ROC - XGBoost (AUC =", round(auc(roc_obj), 3), ")"),
+       x = "1 - Especificidad",
+       y = "Sensibilidad")
+
+importance <- xgb.importance(model = xgb_model$finalModel) %>%
+  mutate(Feature = reorder(Feature, Gain))
+
+ggplot(importance, aes(x = Feature, y = Gain)) +
+  geom_col(fill = "#0072B2") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Importancia de las Variables - XGBoost",
+       x = "Variable",
+       y = "Ganancia (Gain)")
+```
+
+# 6. Interpretación de resultados
+
+El análisis exploratorio inicial permitió identificar que el precio de la vivienda presenta una distribución fuertemente asimétrica hacia la derecha, lo que sugiere la presencia de propiedades de alto valor que elevan significativamente la media. Para abordar esta asimetría, se aplicó una transformación logarítmica al precio, consiguiendo una distribución más cercana a la normalidad y adecuada para los modelos posteriores. 
+
+No obstante, aunque la prueba de Shapiro–Wilk indicó que la normalidad no se cumple estrictamente, el tamaño muestral elevado permite confiar en la robustez de los contrastes aplicados. Asimismo, el test de Levene mostró que no existen diferencias estadísticamente significativas en la varianza del precio entre países, lo que justificó el uso de un ANOVA clásico para comparar medias entre regiones.
+
+En cuanto al modelo de regresión logística, los resultados muestran que la decisión de compra está influida principalmente por el precio de la propiedad, el país y el nivel de satisfacción del comprador. El coeficiente negativo y altamente significativo asociado a `log_price` indica que, a medida que el precio de la vivienda aumenta, disminuye la probabilidad de compra. Esto sugiere que, incluso en mercados con abundante financiación, el coste continúa siendo un factor determinante en la viabilidad de la adquisición. 
+
+Por otro lado, el coeficiente positivo de `satisfaction_score` revela que la valoración subjetiva del inmueble tiene un peso importante en la decisión, lo que resalta el componente emocional y experiencial del proceso de compra. Además, el análisis por país evidenció que algunos mercados, como Brasil, India, Sudáfrica, Singapur, UAE y Estados Unidos, presentan menores probabilidades de compra, lo que puede estar relacionado con diferencias económicas, culturales o estructurales en los mercados inmobiliarios considerados.
+
+El análisis de componentes principales (PCA) se utilizó para reducir la dimensionalidad del conjunto de datos y detectar patrones en las variables relacionadas con la propiedad, el comprador y la financiación. Los resultados mostraron que el primer componente principal (PC1) explica alrededor del 20% de la variabilidad total, mientras que las diez primeras componentes capturan aproximadamente entre el 70% y el 75% de la varianza.
+
+Esto indica que, aunque la información está relativamente dispersa, existen combinaciones lineales de las variables que permiten sintetizar parte relevante del comportamiento del sistema. La visualización de los individuos en el espacio de las dos primeras componentes reveló algunas leves diferencias en la distribución de los datos según el país, lo cual sugiere patrones estructurales en los mercados inmobiliarios analizados.
+
+# 7. Conclusiones
+
+Los resultados obtenidos en el estudio permiten concluir que la decisión de compra de una vivienda no depende únicamente de factores económicos objetivos como el precio o las condiciones de financiación, sino también de variables subjetivas como la satisfacción percibida con el inmueble. Aunque el aumento del precio reduce significativamente la probabilidad de compra, un mayor nivel de satisfacción puede contrarrestar parcialmente este efecto, explicando por qué viviendas aparentemente comparables pueden obtener resultados de venta diferentes. Asimismo, la influencia significativa del país pone de manifiesto la heterogeneidad del mercado inmobiliario global, donde las decisiones y comportamientos financieros no pueden generalizarse entre regiones.
+
+El PCA permitió sintetizar parte de la variabilidad presente en el conjunto de datos y sugirió la existencia de estructuras relacionadas tanto con el perfil financiero del comprador (variables que contribuyen principalmente a PC1) como con las características de la vivienda (variables que contribuyen principalmente a PC2). En conjunto, los análisis realizados refuerzan la importancia de integrar factores económicos, sociales y emocionales en la interpretación de comportamientos de compra dentro del sector inmobiliario.
+
+# 8. Limitaciones
+
+Este estudio presenta algunas limitaciones que deben considerarse al interpretar los resultados. En primer lugar, aunque el dataset es amplio, se conoce que estos datos han sido generados de manera sintética, lo que implica que las relaciones observadas pueden no reflejar con exactitud el comportamiento de un mercado inmobiliario real.
+
+En segundo lugar, el modelo de regresión logística captura relaciones lineales entre las variables, pero la toma de decisiones en la compra de vivienda puede involucrar efectos no lineales y dinámicas que no han sido modeladas.
+
+Finalmente, si bien el PCA ha permitido explorar patrones globales, su interpretación puede ser limitada y sería conveniente complementarlo con análisis adicionales como el clustering.
+
+# 9. Bibliografía
+
+[1] Kaggle (2025). Global House Purchase Decision Dataset. Obtenido de: https://www.kaggle.com
+
+[2] OpenAI (2025). Asistencia en redacción y análisis de datos mediante ChatGPT. Herramienta empleada para la interpretación estadística, síntesis de resultados y redacción del informe.
