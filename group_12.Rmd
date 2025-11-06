@@ -18,11 +18,13 @@ knitr::include_graphics("./portada.png")
 ```
 
 # 1. Introducción
+
 La compra de vivienda es uno de los procesos financieros más importantes para los individuos y familias en todo el mundo. Para la mayoría de compradores, esta adquisición se realiza a través de un préstamo hipotecario, por lo que las instituciones financieras evalúan múltiples factores para determinar si un solicitante es elegible para un crédito y bajo qué condiciones.
 
 El mercado inmobiliario global es un sector clave en la economía, moviendo miles de millones de dólares anualmente. La correcta evaluación del perfil financiero del comprador, junto con las características del inmueble, es fundamental tanto para garantizar el acceso a la vivienda como para reducir el riesgo económico de las entidades financieras.
 
 ## 1.1 Obtención de los datos
+
 El set de datos fue obtenido de la plataforma Kaggle y contiene información global sobre compras de vivienda y decisiones de aprobación hipotecaria. Incluye 200,000 registros (muestras) con 25 variables relacionadas tanto con la propiedad como con el comprador y su historial financiero.
 
 El objetivo principal de este estudio es realizar un análisis estadístico para comprender qué factores influyen en la aprobación o rechazo de un préstamo hipotecario. Asimismo, se buscará identificar qué características del comprador y de la propiedad tienen mayor peso en la decisión final y desarrollar modelos predictivos que permitan anticipar el resultado de aprobación crediticia.
@@ -77,51 +79,36 @@ El análisis se llevará a cabo en dos fases principales:
 10. Referencias
 
 ## 1.3 Variables del dataset
-El conjunto de datos **Global House Purchase Decision Dataset** contiene información detallada sobre propiedades residenciales, características del entorno y perfil financiero de los compradores.  
-En total, incluye **200.000 observaciones** y **más de 30 variables**, que permiten analizar los factores que influyen en la **decisión de compra** y en la **evaluación crediticia** a nivel internacional.
 
-A continuación, se describen las variables más relevantes incluidas en el dataset:
+El conjunto de datos **Global House Purchase Decision Dataset** contiene información detallada sobre propiedades residenciales, características del entorno y perfil financiero de los compradores. En total, incluye **200.000 observaciones** y **25 variables**, que permiten analizar los factores que influyen en la decisión de compra.
 
-- `property_id`: Identificador único de cada propiedad.  
-- `price`: Precio de la vivienda en dólares estadounidenses (USD).  
-- `property_type`: Tipo de propiedad (por ejemplo, *Apartment*, *House*, *Villa*, *Condo*).  
-- `furnishing_status`: Nivel de amueblado del inmueble (*Furnished*, *Semi-Furnished*, *Unfurnished*).  
-- `property_size_sqft`: Tamaño total de la propiedad en pies cuadrados.  
-- `num_bedrooms`: Número de dormitorios de la vivienda.  
-- `num_bathrooms`: Número de baños de la vivienda.  
-- `num_balconies`: Número de balcones o terrazas (si aplica).  
+A continuación, se describen las variables incluidas en el dataset:
+
+- `property_id`: Identificador único de cada propiedad.
 - `country`: País donde se encuentra la propiedad.  
 - `city`: Ciudad en la que está ubicada la vivienda.  
-- `zipcode`: Código postal o área geográfica.  
-- `crime_cases_reported`: Número de crímenes reportados en la zona (indicador de seguridad).  
-- `distance_from_city_center_km`: Distancia desde el centro de la ciudad (en kilómetros).  
-- `public_transport_score`: Índice de accesibilidad al transporte público (0–100).  
-- `school_quality_score`: Índice de calidad de las escuelas cercanas (0–100).  
-- `healthcare_index`: Índice de calidad de los servicios de salud en el área.  
-- `environment_quality_score`: Nivel de calidad ambiental y habitabilidad (0–100).  
-- `customer_age`: Edad del comprador potencial.  
-- `customer_salary`: Salario anual del comprador (en USD).  
-- `employment_type`: Tipo de empleo (*Full-time*, *Part-time*, *Self-employed*, etc.).  
-- `credit_score`: Puntaje crediticio del comprador (0–850).  
+- `property_type`: Tipo de propiedad.
+- `furnishing_status`: Nivel de amueblado del inmueble.  
+- `property_size_sqft`: Tamaño total de la propiedad en pies cuadrados.
+- `price`: Precio de la vivienda en dólares estadounidenses (USD).  
+- `constructed_year`: Año en el que se construyó la propiedad.
+- `previous_owners`: Número de propietarios previos.
+- `rooms`: Número de dormitorios de la vivienda.  
+- `bathrooms`: Número de baños de la vivienda.
+- `garage`: Indica si la propiedad dispone de garaje propio (variable binaria: 1 = sí, 0 = no).
+- `garden`: Indica si la propiedad cuenta con jardín o espacio exterior privado (variable binaria: 1 = sí, 0 = no).
+- `crime_cases_reported`: Número de crímenes reportados en la zona (indicador de seguridad).
+- `legal_cases_on_property`: Número de casos legales asociados a la propiedad.
+- `customer_salary`: Salario del comprador (en USD).  
 - `loan_amount`: Monto solicitado del préstamo hipotecario.  
 - `loan_tenure_years`: Duración del préstamo en años.  
-- `monthly_expenses`: Gastos mensuales promedio del comprador.  
-- `previous_loans`: Número de préstamos previos registrados.  
-- `missed_payments`: Número de pagos atrasados o incumplidos en préstamos anteriores.  
-- `marital_status`: Estado civil del comprador (*Single*, *Married*, *Divorced*, etc.).  
-- `dependents`: Número de personas dependientes económicamente.  
-- `savings_account_balance`: Saldo promedio en cuenta de ahorros.  
-- `investment_portfolio_value`: Valor estimado de inversiones del comprador.  
-- `house_ownership`: Tipo de tenencia actual (*Rented*, *Owned*, *With Family*).  
-- `previous_property_owned`: Número de propiedades poseídas anteriormente.  
-- `customer_satisfaction_score`: Puntuación de satisfacción subjetiva del comprador (escala 1–10).  
-- `agent_rating`: Calificación promedio del agente inmobiliario (escala 1–5).  
-- `approval_time_days`: Tiempo promedio de aprobación del préstamo (en días).  
-- `insurance_opted`: Indica si el comprador ha optado por un seguro hipotecario (1 = Sí, 0 = No).  
-- `decision`: Variable objetivo binaria: *1 = Compra aprobada / 0 = No compra*.  
-
-En conjunto, estas variables abarcan **dimensiones financieras, demográficas, estructurales y geográficas**, permitiendo un análisis integral del proceso de compra de vivienda a nivel global. Este nivel de detalle facilita la aplicación de técnicas de **análisis estadístico multivariante** y **modelos predictivos**, como regresión logística, PCA y algoritmos de machine learning.
-
+- `monthly_expenses`: Gastos mensuales promedio del comprador.
+- `down_payment`: Cantidad inicial que el comprador aporta en efectivo para la compra, antes del préstamo hipotecario.
+- `emi_to_income_ratio`: Relación entre la cuota mensual del préstamo (EMI, Equated Monthly Installment) y el ingreso mensual del comprador.
+- `satisfaction_score`: Puntuación de satisfacción subjetiva del comprador (escala 1–10).
+- `neighbourhood_rating`: Puntuación de la zona o vecindario (escala 1-10).
+- `connectivity_score`: Medida de accesibilidad y transporte de la propiedad (escala 1-10).
+- `decision`: Variable objetivo binaria: *1 = Compra aprobada / 0 = No compra*.
 
 # 2. Análisis exploratorio de los datos
 
@@ -147,6 +134,7 @@ sum(duplicated(data))
 ```
 
 ## 2.2 Resumen estadístico general
+
 ```{r}
 data %>%
   select_if(is.numeric) %>%
@@ -159,6 +147,7 @@ sapply(data %>% select(where(is.character)), n_distinct)
 ## 2.3 Visualización de datos
 
 ### **Distribución de la variable `decision`**
+
 ```{r}
 data %>%
   count(decision) %>%
@@ -174,14 +163,13 @@ data %>%
   theme_minimal() +
   theme(legend.position = "none")
 ```
+
 El gráfico representa la distribución porcentual de la variable decision, que indica si un cliente decide o no comprar una vivienda. Se observa un desequilibrio marcado entre ambas categorías: el 76.97% de los individuos no realiza la compra, mientras que solo el 23.03% decide concretarla.
 
-Esta tendencia revela que, dentro del conjunto de datos, la mayoría de los compradores potenciales no llegan a completar la transacción. Este resultado puede reflejar diversos factores, como la falta de capacidad económica, restricciones crediticias, precios elevados o baja percepción de valor respecto a la inversión.
+Esta distribución desequilibrada es un aspecto importante a considerar, ya que puede influir en el rendimiento de los modelos predictivos.
 
-Desde una perspectiva analítica, esta distribución desequilibrada (class imbalance) es un aspecto importante a considerar, ya que puede influir en el rendimiento de los modelos predictivos. Los algoritmos tienden a ajustarse mejor a la clase mayoritaria (“No compra”), lo que podría reducir su capacidad para identificar correctamente los casos en que sí se concreta la compra. En consecuencia, será recomendable aplicar técnicas de balanceo de clases —como sobremuestreo, submuestreo o SMOTE— para mejorar la representatividad del modelo.
-
-En síntesis, la distribución evidencia una tendencia general a la no compra de viviendas dentro del mercado analizado, reforzando la necesidad de explorar en detalle los factores que favorecen o limitan la decisión de compra en los análisis posteriores.
 ### **Distribución del precio**
+
 ```{r}
 ggplot(data, aes(x = price)) +
   geom_histogram(fill = "#69b3a2", color = "white", bins = 40) +
@@ -191,13 +179,11 @@ ggplot(data, aes(x = price)) +
   theme_minimal()
 ```
 
-El histograma muestra la distribución del precio de las viviendas en dólares estadounidenses (USD). Se observa una distribución asimétrica a la derecha, lo que indica que la mayoría de los inmuebles se concentran en los rangos de precios más bajos, mientras que un número reducido de propiedades presenta precios considerablemente más altos.
+El histograma muestra la distribución del precio de las viviendas en dólares estadounidenses (USD). Se observa una distribución asimétrica a la derecha, parecida a una distribución gamma, lo que indica que la mayoría de los inmuebles se concentran en los rangos de precios más bajos, mientras que un número reducido de propiedades presenta precios considerablemente más altos.
 
-La mayor frecuencia de viviendas se sitúa aproximadamente entre los 500,000 y 1,000,000 USD, reflejando que este rango constituye el segmento más representativo del mercado analizado. A partir de valores superiores a los 2 millones de dólares, la frecuencia disminuye progresivamente, mostrando la presencia de casos atípicos o propiedades de lujo que elevan la cola derecha de la distribución.
+La mayor frecuencia de viviendas se sitúa aproximadamente entre los 500,000 y 1,000,000 USD, reflejando que este rango constituye el segmento más representativo del mercado analizado. A partir de valores superiores a los 2 millones de dólares, la frecuencia disminuye progresivamente, mostrando la presencia de propiedades de lujo que elevan la cola derecha de la distribución.
 
-Este patrón sugiere un mercado inmobiliario heterogéneo, donde predominan las viviendas de precio medio, pero también existe una fracción menor de inmuebles de alto valor. Desde un punto de vista analítico, la asimetría observada justifica la transformación logarítmica del precio (log_price) empleada en el modelo de regresión logística, ya que permite reducir la dispersión, mejorar la normalidad de la variable y facilitar la interpretación de los efectos marginales.
-
-En síntesis, la distribución del precio evidencia un mercado sesgado hacia propiedades de costo medio-bajo, con presencia limitada pero relevante de viviendas de alto valor económico.
+A continuación, aplicaremos una transformación logarítmica al precio con el objetivo de aproximar su distribución a una normal.
 
 ```{r}
 data <- data %>% mutate(log_price = log(price))
@@ -209,14 +195,11 @@ ggplot(data, aes(x = log_price)) +
   x = "Precio (USD)", y = "Frecuencia") +
   theme_minimal()
 ```
-Tras aplicar la transformación logarítmica al precio de las viviendas, se observa que la distribución se aproxima notablemente a una distribución normal, corrigiendo la fuerte asimetría a la derecha presente en los valores originales.
 
-La transformación logra reducir la dispersión de los precios y concentrar la mayoría de los valores en torno a la media, facilitando así la interpretación estadística y el ajuste de modelos que asumen normalidad o linealidad en las relaciones entre variables.
+Tras aplicar la transformación logarítmica al precio de las viviendas, se observa que la distribución se aproxima más a una distribución normal, corrigiendo la fuerte asimetría a la derecha presente en los valores originales.
 
-En términos analíticos, este resultado justifica el uso de la variable log_price en el modelo de regresión logística, ya que permite una estimación más estable de los coeficientes y una mejor interpretación de los efectos marginales del precio sobre la decisión de compra.
-
-En síntesis, la transformación logarítmica mejora la simetría y normalidad de la distribución, ofreciendo una representación más adecuada del comportamiento de los precios en el mercado inmobiliario analizado.
 ### **Distribución del precio por país y por tipo de propiedad**
+
 ```{r}
 # Boxplot de precios por país
 data %>%
@@ -227,7 +210,11 @@ data %>%
   labs(title = "Distribución del precio por país (Top 10)",
        x = "País", y = "Precio (USD)") +
   theme_minimal()
+```
 
+En este gráfico se aprecia que Singapur, Emiratos Árabes Unidos (UAE), Japón y Estados Unidos presentan los precios medianos más altos, así como una mayor dispersión, lo que refleja mercados con viviendas de alto valor y mayor desigualdad de precios. En contraste, países como Brasil, India y Sudáfrica muestran precios sustancialmente más bajos y con menor variabilidad, indicando mercados más accesibles y homogéneos.
+
+```{r}
 # Boxplot de precios por tipo de propiedad
 
 data %>%
@@ -239,15 +226,11 @@ data %>%
        x = "Propiedad", y = "Precio (USD)") +
   theme_minimal()
 ```
-El análisis conjunto de los boxplots de precio por país y precio por tipo de propiedad permite observar una marcada heterogeneidad en el mercado inmobiliario internacional.
 
-En el gráfico de precio por país, se aprecia que Singapur, Emiratos Árabes Unidos (UAE), Japón y Estados Unidos presentan los precios medianos más altos, así como una mayor dispersión, lo que refleja mercados con viviendas de alto valor y mayor desigualdad de precios. En contraste, países como Brasil, India y Sudáfrica muestran precios sustancialmente más bajos y con menor variabilidad, indicando mercados más accesibles y homogéneos.
-
-Por otro lado, el boxplot por tipo de propiedad evidencia diferencias estructurales dentro de cada mercado: las casas independientes suelen tener precios más elevados que los apartamentos o viviendas adosadas, lo que es coherente con su mayor tamaño y nivel de privacidad. Sin embargo, en países con alta densidad urbana —como Singapur o Japón— los apartamentos alcanzan precios comparables o incluso superiores a las viviendas unifamiliares, debido a la limitada disponibilidad de espacio y la alta demanda urbana.
-
-En conjunto, ambos gráficos muestran que el precio de la vivienda está fuertemente condicionado tanto por factores geográficos como por el tipo de propiedad. Los países desarrollados y altamente urbanizados tienden a concentrar los precios más altos, mientras que el tipo de inmueble determina la posición relativa dentro del mercado nacional. Esta comparación refuerza la idea de que el análisis de precios inmobiliarios debe considerar simultáneamente el contexto espacial y estructural de las propiedades.
+Por otro lado, el boxplot por tipo de propiedad evidencia que no hay diferencias estructurales dentro de cada mercado. Si bien es cierto que hay propiedades muy caras (outliers) en todos los tipos de propiedades, las distribuciones centrales son bastante similares, sin diferencias estructurales marcadas entre categorías.
 
 ### **Relaciones entre variables numéricas**
+
 ```{r}
 # Seleccionar variables numéricas relevantes
 
@@ -261,21 +244,19 @@ corr_matrix <- cor(num_vars)
 
 corrplot(corr_matrix, method = "color", type = "upper", tl.col = "black", order = "hclust")
 ```
+
 El análisis de las relaciones entre las variables numéricas revela patrones coherentes con el comportamiento esperado en un contexto inmobiliario. 
 
-En primer lugar, se observa una correlación positiva moderada entre el precio de la vivienda y el tamaño del inmueble (`property_size_sqft`), lo cual es lógico, ya que las propiedades de mayor superficie tienden a tener precios más altos.  
+En primer lugar, se observa una correlación positiva entre el precio de la vivienda y el tamaño del inmueble (`property_size_sqft`), lo cual es lógico, ya que las propiedades de mayor superficie tienden a tener precios más altos.
 
-Asimismo, variables como el salario del comprador (`customer_salary`) y el monto del préstamo (`loan_amount`) muestran una relación directa con el precio, reflejando que los compradores con mayor capacidad económica tienden a adquirir viviendas más costosas. Este patrón también se relaciona con un mayor puntaje crediticio (`credit_score`), lo que sugiere que las condiciones financieras y la estabilidad del comprador son determinantes en la posibilidad de acceder a propiedades de alto valor.  
+Asimismo, variables como el salario del comprador (`customer_salary`), la cantidad inicial que el comprador aporta (`down_payment`) y el monto del préstamo (`loan_amount`) muestran también una relación directa con el precio, reflejando que los compradores con mayor capacidad económica tienden a adquirir viviendas más costosas.
 
-Por otro lado, la variable `monthly_expenses` presenta una correlación más débil con el precio o el tamaño de la vivienda, indicando que los gastos mensuales no dependen únicamente del valor del inmueble, sino también de otros factores personales o contextuales.  
+En cuanto a correlaciones negativas, vemos una relación lógica entre `customer_salary` y `emi_to_income_ratio`: cuanto mayor es el salario del comprador, menor es la proporción que representa la cuota mensual del préstamo respecto a sus ingresos. Esto es coherente, ya que un ingreso alto diluye el peso relativo de la cuota hipotecaria, mejorando la capacidad de pago.
 
-En conjunto, las correlaciones entre las variables numéricas refuerzan la existencia de dos dimensiones principales:  
-1. Una económica, asociada a los ingresos, crédito y préstamos, que condiciona la capacidad de compra.  
-2. Una estructural, vinculada al tamaño y características físicas de la propiedad, que determina su valor en el mercado.  
-
-Estas relaciones justifican el uso de técnicas multivariantes, como el Análisis de Componentes Principales (PCA) y la regresión logística, para sintetizar la información y analizar de forma integrada los factores que influyen en la decisión de compra.
+Además, existe una correlación negativa interesante entre `legal_cases_on_property` y `decision`. Esto significa que, a medida que aumentan los casos legales asociados a una propiedad, disminuye la probabilidad de que la decisión final sea positiva (compra aprobada).
 
 ### **Relaciones bivariantes**
+
 ```{r}
 # Salario vs Decisión de compra
 data %>%
@@ -301,16 +282,15 @@ data %>%
   x = "Número de crímenes", y = "Precio medio (USD)") +
   theme_minimal()
 ```
+
 El análisis de las relaciones bivariantes permite identificar cómo ciertas variables influyen directamente en la decisión de compra y en el precio de la vivienda.  
 
-En primer lugar, se observa que el salario del cliente (`customer_salary`) presenta una relación positiva con la decisión de compra: los compradores con ingresos más elevados tienden a tener una mayor probabilidad de adquirir una vivienda. Este comportamiento es coherente con la lógica económica, ya que un mayor poder adquisitivo facilita el acceso a la financiación y reduce la percepción de riesgo por parte de las entidades financieras.  
+En primer lugar, se observa que el salario del cliente (`customer_salary`) presenta una relación positiva con la decisión de compra.
 
-Por otra parte, la relación entre el número de crímenes reportados (`crime_cases_reported`) y el precio medio de las viviendas muestra una tendencia inversa: los precios disminuyen a medida que aumenta la incidencia delictiva. Esto sugiere que la seguridad del entorno es un factor relevante en la valoración del inmueble y en la disposición de compra de los consumidores, reflejando la importancia del contexto urbano y social.  
-
-Estas relaciones refuerzan la idea de que tanto las condiciones económicas personales como los factores contextuales (seguridad y ubicación) influyen significativamente en el comportamiento del comprador y en la dinámica del mercado inmobiliario.  
-En conjunto, los resultados evidencian que la decisión de compra no depende únicamente del precio o de las características físicas del inmueble, sino también de variables socioeconómicas y de calidad de vida.
+Por otra parte, la relación entre el número de crímenes reportados (`crime_cases_reported`) y el precio medio de las viviendas muestra una tendencia inversa: los precios disminuyen a medida que aumenta la incidencia delictiva.
 
 ### **Decisión de compra por país**
+
 ```{r}
 # ¿Qué porcentaje de personas toma la decisión de comprar una vivienda en cada país?
 data %>%
@@ -327,15 +307,10 @@ data %>%
   x = "País", y = "% de compras") +
   theme_minimal()
 ```
-El análisis de la decisión de compra por país revela diferencias significativas en el comportamiento de los compradores según su ubicación geográfica.  
-Se observa que algunos países presentan una mayor proporción de decisiones de compra positivas, lo que puede estar relacionado con factores como la estabilidad económica, el nivel de ingresos promedio, las condiciones crediticias o las características del mercado inmobiliario local.
 
-Por ejemplo, países con economías desarrolladas y sistemas financieros consolidados muestran tasas de aprobación más elevadas, mientras que en otras regiones con mercados menos accesibles o mayor volatilidad económica, la probabilidad de compra es menor.  
+El análisis de la decisión de compra por país revela diferencias significativas en el comportamiento de los compradores según su ubicación geográfica.
 
-Estas diferencias también pueden reflejar variaciones culturales y regulatorias: en algunos países, la compra de vivienda es vista como una forma de inversión a largo plazo, mientras que en otros predomina el alquiler o el acceso a través de crédito limitado.  
-
-En conjunto, este análisis pone de manifiesto que la ubicación geográfica es un factor determinante en la decisión de compra, integrando tanto aspectos económicos como sociales, y resalta la necesidad de adaptar estrategias comerciales y financieras a las particularidades de cada mercado.
-
+Se observa que algunos países presentan una mayor proporción de decisiones de compra positivas, lo que puede estar relacionado con factores como la estabilidad económica, el nivel de ingresos promedio o las características del mercado inmobiliario local.
 
 # 3. Contraste de hipótesis y estadística inferencial
 
@@ -353,7 +328,7 @@ Hipótesis:
 shapiro.test(sample(data$log_price, 5000))
 ```
 
-El test de Shapiro–Wilk, aplicado a una muestra aleatoria de la variable log(price), arrojó un valor de p < 2.2e-16, lo que sugiere que la variable transformada no sigue una distribución normal perfecta. No obstante, dado el gran tamaño muestral, el ANOVA resulta suficientemente robusto frente a desviaciones de normalidad, por lo que la ligera falta de ajuste no compromete la validez del análisis.
+El test de Shapiro–Wilk, aplicado a una muestra aleatoria de la variable `log_price`, muestra un p-value < 2.2e-16, lo que sugiere que la variable transformada no sigue una distribución normal perfecta. No obstante, dado el gran tamaño muestral, el ANOVA resulta suficientemente robusto frente a desviaciones de normalidad, por lo que la ligera falta de ajuste no compromete la validez del análisis.
 
 A continuación, se realiza la prueba de Levene para ver si las varianzas entre países son homogéneas o no, y esto nos indicará si podemos utilizar el test paramétrico de ANOVA o, en caso contrario, el de Kruskal-Wallis.
 
@@ -362,9 +337,7 @@ A continuación, se realiza la prueba de Levene para ver si las varianzas entre 
 leveneTest(log_price ~ factor(country), data = data)
 ```
 
-El resultado (p = 0.126) sugiere que no existe evidencia suficiente para rechazar la hipótesis nula de igualdad de varianzas, cumpliéndose así el supuesto de homocedasticidad.
-
-Dado que ambos supuestos se consideran satisfechos, se optó por aplicar un ANOVA clásico para comparar los precios medios de las viviendas entre países utilizando la variable transformada log(price). En caso contrario (si las varianzas hubieran sido significativamente distintas), se habría recurrido a la alternativa no paramétrica de Kruskal–Wallis.
+El resultado (p = 0.126) sugiere que no existe evidencia suficiente para rechazar la hipótesis nula de igualdad de varianzas, cumpliéndose así el supuesto de homocedasticidad. Por ello, se aplicó un ANOVA clásico para comparar el precio medio entre países usando la variable transformada.
 
 ```{r}
 # ANOVA
@@ -372,21 +345,18 @@ anova_country <- aov(log_price ~ factor(country), data = data)
 summary(anova_country)
 ```
 
-El análisis de varianza (ANOVA) realizado sobre el precio de la vivienda en su escala logarítmica revela diferencias estadísticamente significativas entre países. El modelo muestra un valor F = 7414 con un nivel de significancia extremadamente bajo (p < 2e-16), lo que indica que la variación del precio medio de las viviendas difiere de forma sustancial según el país.
+El ANOVA realizado sobre el precio de la vivienda en su escala logarítmica revela diferencias estadísticamente significativas entre países. El modelo muestra un p-value < 2e-16, lo que indica que la variación del precio medio de las viviendas difiere de forma sustancial según el país.
 
-En otras palabras, el país constituye un factor determinante en la formación del precio inmobiliario global. Estas diferencias pueden atribuirse a disparidades estructurales entre mercados —como el nivel de desarrollo económico, la demanda habitacional, las políticas crediticias o la regulación del sector— que influyen directamente sobre los precios de las propiedades.
-
-El alto valor del estadístico F refleja que la proporción de variabilidad explicada por el país es muy superior a la variabilidad interna dentro de cada país, reforzando la conclusión de que la localización geográfica es uno de los principales determinantes del valor de la vivienda a escala internacional.
-
-Este test de Tukey incluye una corrección automática del error familiar (FWER), garantizando que la probabilidad de obtener falsos positivos se mantenga controlada al realizar múltiples comparaciones simultáneas.
+Ahora llevaremos a cabo el test de Tukey para ver qué países difieren entre sí en el precio medio. Este test incluye una corrección automática del error familiar (FWER), garantizando que la probabilidad de obtener falsos positivos se mantenga controlada al realizar múltiples comparaciones simultáneas.
 
 ```{r}
 # Post-hoc Tukey
 tukey <- TukeyHSD(anova_country)
+tukey
 sum(tukey[["factor(country)"]][, "p adj"]>0.05)
 ```
-El test post-hoc de Tukey, que incorpora una corrección automática del error familiar (FWER) para controlar la probabilidad de falsos positivos en comparaciones múltiples, confirma que todas las diferencias entre los pares de países son estadísticamente significativas (p < 0.05).
-Este resultado refuerza la conclusión del ANOVA, indicando que el país de localización influye de manera decisiva en el precio medio de las viviendas, y que no existen grupos de países con precios similares dentro del conjunto analizado.
+
+El test post-hoc de Tukey mostró diferencias significativas entre todos los pares de países (p-value < 0.05), confirmando que el país de localización es un factor determinante en el precio de la vivienda.
 
 ## 3.2 Factores que influyen en la decisión de compra
 
@@ -420,52 +390,95 @@ ggplot(coef_plot, aes(x = term, y = estimate)) +
        x = "Variables", y = "Coeficiente")
 ```
 
-El modelo de regresión logística muestra que la decisión de compra está influida principalmente por el precio de la vivienda (en su escala logarítmica), el país donde se ubica el inmueble y el nivel de satisfacción del comprador. En particular, se observa que el coeficiente de log_price es negativo y altamente significativo (p < .001), lo que indica que, a medida que el precio aumenta, la probabilidad de que el comprador decida adquirir la vivienda disminuye. Este resultado sugiere que la capacidad económica constituye un factor limitante esencial en la decisión final de compra.
+El modelo de regresión logística muestra que la decisión de compra está influida principalmente por el precio de la vivienda (en su escala logarítmica), el país donde se ubica el inmueble y el nivel de satisfacción del comprador. En particular, se observa que el coeficiente de log_price es negativo y altamente significativo (p-value < 2e-16), lo que indica que, a medida que el precio aumenta, la probabilidad de que el comprador decida adquirir la vivienda disminuye. Este resultado sugiere que la capacidad económica es un factor limitante importante en la decisión.
 
-La variable satisfaction_score presenta un efecto positivo y muy significativo (p < .001), implicando que un mayor nivel de satisfacción subjetiva incrementa considerablemente la probabilidad de compra. Este hallazgo pone de relieve el peso de los factores emocionales y de percepción personal, además de los estrictamente financieros, en la decisión de adquisición de una vivienda.
+La variable satisfaction_score presenta un efecto positivo y muy significativo (p-value < 2e-16), implicando que un mayor nivel de satisfacción incrementa considerablemente la probabilidad de compra. Este resultado destaca el papel de la percepción personal y la valoración emocional del inmueble en la toma de decisiones, además de los factores económicos.
 
-En cuanto al país de residencia, se identifican diferencias significativas entre mercados. Los compradores en Brasil, India, Sudáfrica, Singapur, Emiratos Árabes Unidos y Estados Unidos presentan probabilidades de compra significativamente menores en comparación con el país de referencia (Australia). Estas diferencias sugieren la existencia de factores estructurales, regulatorios y culturales que condicionan la decisión de compra, como políticas de crédito, estabilidad económica o condiciones del mercado inmobiliario local.
+En cuanto al país de residencia, se identifican diferencias significativas entre mercados. Los compradores en Brasil, India, Sudáfrica, Singapur, Emiratos Árabes Unidos y Estados Unidos presentan probabilidades de compra significativamente menores en comparación con el país de referencia (Australia).
 
-Por el contrario, variables relacionadas con las características físicas del inmueble —como el número de baños (bathrooms), de habitaciones (rooms) o de propietarios anteriores (previous_owners)— no muestran efectos estadísticamente significativos cuando se controlan las demás variables del modelo. Esto indica que, en este contexto internacional, las condiciones socioeconómicas del comprador y su satisfacción percibida tienen un peso mayor que las características estructurales de la vivienda en la decisión final de compra.
+Por el contrario, variables relacionadas con las características físicas del inmueble —como el número de baños (`bathrooms`), de habitaciones (`rooms`) o de propietarios anteriores (`previous_owners`)— no muestran efectos estadísticamente significativos cuando se controlan las demás variables del modelo.
 
 # 4. PCA: Análisis de Componentes Principales
 
+El análisis de componentes principales (PCA) es clave para identificar los factores que explican la mayor parte de la variabilidad en nuestro conjunto de datos.
+
 ```{r}
-numeric_data <- data %>%
-  select(where(is.numeric))
+# PCA no admite factores ni variables categóricas
+pca_data <- data %>%
+  select(property_size_sqft, price, log_price,constructed_year,
+         previous_owners, rooms, bathrooms, garage, garden,
+         crime_cases_reported, legal_cases_on_property,
+         customer_salary, loan_amount, loan_tenure_years,
+         monthly_expenses, down_payment, emi_to_income_ratio,
+         satisfaction_score, neighbourhood_rating,
+         connectivity_score)
 
-numeric_data <- numeric_data %>%
-  select(-any_of(c("property_id", "decision")))
-
-scaled_data <- scale(numeric_data)
-
-pca_result <- prcomp(scaled_data, center = TRUE, scale. = TRUE)
+pca_result <- prcomp(pca_data, scale. = TRUE)
 summary(pca_result)
+```
 
-varianza_explicada <- pca_result$sdev^2 / sum(pca_result$sdev^2)
+## 4.1 Varianza explicada los componentes
+
+```{r}
+varianza_explicada <- pca_result$sdev^2 /sum(pca_result$sdev^2)
 varianza_acumulada <- cumsum(varianza_explicada)
 
-plot(varianza_acumulada,
-     type = "b",
-     pch = 19,
-     col = "#0072B2",
-     xlab = "Número de Componentes Principales",
-     ylab = "Varianza Explicada Acumulada",
-     main = "Varianza explicada por los componentes principales")
-abline(h = 0.80, col = "red", lty = 2)
+df_varianza <- data.frame(
+  Componente = 1:length(varianza_acumulada),
+  Varianza_Acumulada = varianza_acumulada
+)
 
-
-
-
-
-
-
-
+ggplot(df_varianza, aes(x = Componente, y = Varianza_Acumulada)) +
+  geom_line(color = "#0072B2", linewidth = 1) +
+  geom_point(color = "#0072B2", size = 2) +
+  geom_hline(yintercept = 0.80, linetype = "dashed", color = "red") +
+  theme_minimal() +
+  labs(title = "Varianza explicada acumulada",
+       x = "Número de Componentes",
+       y = "Varianza Acumulada") +
+  scale_x_continuous(breaks = df_varianza$Componente)
 ```
-El análisis de componentes principales (PCA) ha sido clave para identificar los factores que explican la mayor parte de la variabilidad en el conjunto de datos sobre compras de vivienda a nivel internacional. Los resultados indican que el primer componente principal (PC1) captura una porción significativa de la varianza total, alrededor del 18% al 20%. Además, los primeros diez componentes en conjunto explican cerca del 70–75% de la variabilidad del conjunto de datos.
 
-Desde una perspectiva interpretativa, los componentes principales están principalmente relacionados con variables financieras y estructurales. El PC1 parece estar fuertemente vinculado a factores como el precio de la vivienda, el salario del cliente y el monto del préstamo, lo que sugiere que este eje resume el nivel económico y la capacidad de compra de los compradores. Por otro lado, el PC2 refleja variaciones asociadas a características físicas del inmueble, como el tamaño, el número de habitaciones o la ubicación dentro del país.
+Los resultados indican que el primer componente principal (PC1) captura una porción significativa de la varianza total, alrededor del 20%. Además, los primeros diez componentes en conjunto explican cerca del 70–75% de la variabilidad del conjunto de datos.
 
-El gráfico que muestra la varianza explicada revela un punto de inflexión a partir del octavo componente, lo que sugiere que los primeros componentes concentran la mayor parte de la información relevante. Esto podría ser útil para simplificar el análisis o para alimentar modelos predictivos posteriores, como los de aprobación hipotecaria o decisiones de compra.
+## 4.2 ¿Qué información nos dan las dos primeras componentes?
 
-En resumen, el PCA demuestra que gran parte de la variabilidad en el mercado inmobiliario internacional puede explicarse a partir de un grupo reducido de factores económicos y estructurales, confirmando que los aspectos financieros del comprador y el valor del inmueble son los elementos más determinantes en la dinámica global de compra de vivienda.
+```{r}
+# Extraer scores de las dos primeras componentes
+scores <- as.data.frame(pca_result$x[,1:2])
+scores$country <- data$country
+
+ggplot() +
+  geom_point(data = scores, aes(x = PC1, y = PC2, color =
+                                  country), alpha = 0.6) +
+  theme_minimal() +
+  labs(title = "Primeras dos componentes del PCA",
+       x = "PC1",
+       y = "PC2",
+       color = "País")
+```
+
+## 4.3 Variables que más contribuyen a PC1 y PC2
+
+```{r}
+# Qué variables contribuyen a PC1 y PC2
+loadings <- as.data.frame(pca_result$rotation[,1:2])
+loadings$variable <- rownames(loadings)
+
+# Contribución para PC1
+PC1_contrib_df <- loadings %>%
+  select(PC1) %>%
+  arrange(desc(PC1))
+
+# Contribución para PC2
+PC2_contrib_df <- loadings %>%
+  select(PC2) %>%
+  arrange(desc(PC2))
+
+head(PC1_contrib_df, 5)
+head(PC2_contrib_df, 5)
+```
+
+PC1 está fuertemente asociado con el nivel económico y el tamaño de la propiedad. Las variables financieras (precio, cantidad de préstamo, pago inicial) y el tamaño del inmueble tienen cargas altas y positivas, lo que indica que este componente captura principalmente un gradiente de propiedades de mayor costo y mayor superficie frente a propiedades más económicas y pequeñas.
+
+PC2 está dominado casi exclusivamente por la estructura interna del inmueble (número de habitaciones y baños). Estos dos atributos se mueven prácticamente de forma conjunta y definen la configuración habitacional del inmueble, independientemente del precio total.
