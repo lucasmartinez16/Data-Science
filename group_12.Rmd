@@ -34,31 +34,23 @@ El objetivo principal de este estudio es realizar un análisis estadístico para
 A lo largo de este trabajo, se pretenden analizar las siguientes preguntas:
 
 - *¿Qué variables explican mejor el precio de una vivienda?*
-  - ¿Influyen el país, tipo de propiedad, tamaño, número de habitaciones o el estado de
-  mobiliario?
-  - ¿Qué relación existe entre el precio y variables como el salario del comprador, el
-  número de propietarios anteriores o el año de construcción?
+  - ¿Influyen el país, tipo de propiedad, tamaño y número de crímenes reportados?
+  - ¿Qué relación existe entre el precio y variables como el salario del comprador o el pago previo a la hipotéca?
   
 - *¿Qué factores determinan la decisión de compra (variable decision)?*
-  - ¿Qué peso tienen variables como el ratio EMI/income, el nivel de satisfacción
-  (satisfaction_score), el rating del vecindario (neighbourhood_rating) o la conectividad
-  (connectivity_score)?
+  - ¿Qué peso tienen variables como el ratio EMI/income, el nivel de satisfacción, el número de habitaciones o la cantidad de propietarios anteriores?
   - ¿Se puede predecir la decisión de compra con un modelo de clasificación?
   
 - *¿Existen diferencias significativas entre países o ciudades en cuanto a precios y decisiones de compra?*
-  - ¿Qué países tienen precios más altos en promedio?
-  - ¿Hay diferencias en la tasa de compra (decision = 1) entre regiones?
+  - ¿Qué países tienen precios más altos en promedio? ¡Y más bajos?
 
-- *¿Cómo se distribuye el precio de las viviendas y hasta qué punto es posible predecirlo con modelos estadísticos y de machine learning?*
-  - ¿Se ajusta a una distribución teórica conocida (gamma, log-normal, normal)?
-  - ¿Qué modelo de regresión (lineal, regularizado o de machine learning) ofrece mejor
-  rendimiento en la predicción del precio?
-  - ¿Qué variables son más relevantes en la estimación?
+- *¿Qué factores recogen la mayoría de la información del dataset?*
+  - ¿Es posible simplificar el conjunto de variables en un conjunto más pequeño de componentes principales que capture la mayor parte de la varianza?
+  - ¿Cuántos componentes necesitaríamos para capturar el 80% de la varianza?
   
 - *¿Qué insights se pueden extraer sobre el perfil del comprador?*
   - ¿Qué relación hay entre salario, gastos mensuales, préstamo y decisión de compra?
-  - ¿Influyen los aspectos legales (legal_cases_on_property) o de seguridad
-  (crime_cases_reported)?
+  - ¿Influyen los aspectos legales (legal_cases_on_property) o de seguridad (crime_cases_reported)?
 
 El análisis se llevará a cabo de la siguiente manera:
 
@@ -69,7 +61,9 @@ El análisis se llevará a cabo de la siguiente manera:
 5. PCA: Análisis de Componentes Principales  
     - Varianza explicada  
     - Componentes principales
-6. Modelos de Machine Learning para la decisión de compra 
+6. Modelos de Machine Learning para la decisión de compra
+    - Regresión Logística
+    - Random Forest
 7. Interpretación de resultados
 8. Conclusiones y limitaciones
 9. Bibliografía
@@ -119,8 +113,8 @@ library(scales)
 library(broom)
 library(car)
 library(caret)
-library(randomForest)
 library(xgboost)
+library(glmnet)
 library(pROC)
 
 data <- read.csv('./global_house_purchase_dataset.csv')
@@ -358,6 +352,45 @@ sum(tukey[["factor(country)"]][, "p adj"]>0.05)
 
 El test post-hoc de Tukey mostró diferencias significativas entre todos los pares de países (p-value < 0.05), confirmando que el país de localización es un factor determinante en el precio de la vivienda.
 
+## 3.2 Diferencia de precio entre casas con y sin jardín
+
+Hipótesis:
+
+- H0: El precio medio de las casas con jardín es igual al precio medio de las casas sin jardín.
+- H1: El precio medio es diferente.
+
+```{r}
+t_test <- data%>%
+  mutate(garden = factor(garden)) %>%
+  select(price, garden)
+
+shapiro.test(sample(t_test$price[t_test$garden == 0], 5000))
+shapiro.test(sample(t_test$price[t_test$garden == 1], 5000))
+
+wilcox <- wilcox.test(price ~ garden, data = data)
+wilcox
+```
+
+El test de Shapiro-Wilk aplicado a los precios en los grupos con y sin jardín presentó p-values menores a 2.2e-16, lo que indica que en ambos casos la distribución del precio se desvía significativamente de la normalidad. Por esta razón, se utilizó el test no paramétrico de Wilcoxon para comparar los precios entre los dos grupos. El resultado del test (p = 0.9945) muestra que no existe evidencia estadísticamente significativa para afirmar que el precio de las propiedades difiera entre viviendas con jardín y viviendas sin jardín. En otras palabras, la presencia de jardín no parece estar asociada con diferencias en el nivel de precios dentro de este conjunto de datos.
+
+## 3.3 Dependencia entre el tipo de propiedad y garaje
+
+Hipótesis:
+
+- H0: El tipo de propiedad es independiente de si tiene garaje.
+- H1: Las variables son dependientes (existe una asociación).
+
+```{r}
+tabla_contingencia <- table(data$property_type, data$garage)
+tabla_contingencia
+
+# Test de Chi-cuadrado
+chi_resultado <- chisq.test(tabla_contingencia)
+chi_resultado
+```
+
+Se realizó un test de Chi-cuadrado para evaluar la relación entre el tipo de propiedad y la presencia de garaje. El resultado obtenido (p = 0.036) indica que existe una diferencia estadísticamente significativa entre ambos factores, ya que el p-value es menor que 0.05. Esto implica que la disponibilidad de garaje no es independiente del tipo de vivienda: algunos tipos de propiedad presentan mayor probabilidad de contar con garaje que otros.
+
 # 4. PCA: Análisis de Componentes Principales
 
 El análisis de componentes principales (PCA) es clave para identificar los factores que explican la mayor parte de la variabilidad en nuestro conjunto de datos.
@@ -418,6 +451,8 @@ ggplot() +
        color = "País")
 ```
 
+Se representaron gráficamente las dos primeras componentes principales (PC1 y PC2) obtenidas del análisis PCA con el objetivo de visualizar cómo se distribuyen los países en el nuevo espacio de menor dimensión. En este gráfico, cada punto corresponde a una vivienda y los colores indican el país al que pertenece. En este caso, no se aprecia una separación fuerte entre países (quizás Singapur sí difiera del resto) lo que sugiere que las características cuantitativas consideradas presentan estructuras similares entre regiones, o que las diferencias entre países quedan capturadas en componentes posteriores con menor varianza explicada. En otras palabras, el país por sí solo no parece ser el factor principal de variación en las características numéricas de los inmuebles dentro del conjunto de datos.
+
 ## 4.3 Variables que más contribuyen a PC1 y PC2
 
 ```{r}
@@ -449,37 +484,90 @@ PC2 está dominado casi exclusivamente por la estructura interna del inmueble (n
 
 ```{r}
 data$decision <- as.factor(data$decision)
+data$country <- as.factor(data$country)
 
-model1 <- glm(decision ~ log_price + factor(country) +
-                satisfaction_score + bathrooms + rooms +
-                previous_owners, data
-              = data, family = binomial)
+train_index <- createDataPartition(data$decision, p = 0.8, list = FALSE)
 
-summary(model1)
+train_data <- data[train_index, ]
+test_data <- data[-train_index, ]
+
+# Comprobar proporciones
+prop.table(table(train_data$decision))
+prop.table(table(test_data$decision))
 ```
 
-```{r}
-coef_plot <- tidy(model1) %>%
-  filter(term != "(Intercept)") %>%
-  mutate(signif = ifelse(p.value < 0.05, "*", ""),
-         term = paste0(term, signif),
-         term = reorder(term, estimate))
+Primero se convirtió la variable decision y country en factores, ya que ambas representan categorías y no valores numéricos continuos. A continuación, se realizó una partición del conjunto de datos en dos subconjuntos: uno de entrenamiento (80% de las observaciones) y otro de prueba (20% restante). La partición se llevó a cabo de manera estratificada utilizando la función createDataPartition, lo que garantiza que la proporción de clases en la variable decision se mantenga similar en ambos conjuntos. El conjunto de entrenamiento (train_data) se empleará para ajustar los modelos de clasificación, mientras que el conjunto de prueba (test_data) se utilizará posteriormente para evaluar su rendimiento y capacidad de generalización. Esto permite evitar el sobreajuste y obtener una estimación más realista del desempeño del modelo sobre datos no vistos durante el entrenamiento.
 
-ggplot(coef_plot, aes(x = term, y = estimate)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = estimate - std.error, ymax =
-                      estimate + std.error),
-                width = 0.2) +
+```{r}
+# Definir la fórmula del modelo
+formula <- decision ~ log_price + country + satisfaction_score + bathrooms + rooms + previous_owners
+
+x_train <- model.matrix(formula, data = train_data)[, -1]
+y_train <- train_data$decision
+
+x_test <- model.matrix(formula, data = test_data)[, -1]
+y_test <- test_data$decision
+```
+
+En este bloque de código se define primero la fórmula del modelo, indicando que la variable respuesta será decision, mientras que las variables predictoras seleccionadas son log_price, country, satisfaction_score, bathrooms, rooms y previous_owners. A continuación, se utiliza la función model.matrix() para transformar esta fórmula en matrices numéricas que puedan ser utilizadas por modelos como Lasso o cualquier algoritmo de machine learning que requiera datos puramente numéricos. Esta función convierte automáticamente las variables categóricas, como country, en variables dummy (codificación one-hot), y posteriormente se elimina la primera columna para evitar problemas de multicolinealidad. De este modo, x_train y x_test contienen únicamente predictores numéricos, mientras que y_train y y_test guardan la variable objetivo en formato factor.
+
+```{r, eval=FALSE}
+lasso_model_cv <- cv.glmnet(
+  x_train,
+  y_train,
+  alpha = 1,
+  family = "binomial",
+  type.measure = "auc"
+)
+```
+```{r, include=FALSE}
+lasso_model_cv <- readRDS("model_lasso_cv.rds")
+```
+
+En este paso se entrena un modelo Lasso aplicado a regresión logística utilizando la función cv.glmnet(). El parámetro alpha = 1 especifica que se emplea la penalización Lasso, cuya característica principal es la selección automática de variables, ya que fuerza a algunos coeficientes a volverse exactamente cero, eliminando predictores poco relevantes. Se indica además family = "binomial" porque la variable respuesta decision es categórica binaria, por lo que el modelo ajusta probabilidades mediante una función logística. La opción type.measure = "auc" hace que el proceso de validación cruzada seleccione el valor óptimo del parámetro de regularización λ maximizando el área bajo la curva ROC, favoreciendo un modelo con buen poder discriminativo. De esta manera, el modelo resultante equilibra adecuadamente complejidad y rendimiento, reteniendo únicamente las variables más informativas para la predicción de la decisión de compra.
+
+```{r message=FALSE, warning=FALSE}
+# Extraer el valor óptimo de Lambda (el que maximiza el AUC)
+lambda_min <- lasso_model_cv$lambda.min
+
+predictions_prob <- predict(lasso_model_cv, s = lambda_min,
+                            newx = x_test, type = "response")[,1]
+
+# Calcular la curva ROC y el AUC
+roc_curve <- roc(response = y_test, predictor = predictions_prob)
+auc_value <- auc(roc_curve)
+
+coef_matrix <- coef(lasso_model_cv, s = lambda_min)
+
+coef_plot <- data.frame(
+  term = coef_matrix@Dimnames[[1]][coef_matrix@i + 1],
+  estimate = coef_matrix@x)
+
+# Filtrar el intercept y los coeficientes que Lasso hizo 0
+coef_plot_filtered <- coef_plot %>%
+  filter(term != "(Intercept)" & estimate != 0) %>%
+  mutate(term = reorder(term, estimate))
+```
+
+Una vez entrenado el modelo Lasso mediante validación cruzada, se extrae el valor óptimo del parámetro de regularización λ (lambda.min), que corresponde al modelo con mayor área bajo la curva ROC (AUC). Utilizando este valor, se generan predicciones de probabilidad para los datos de test. Dichas probabilidades se evalúan mediante la curva ROC, obteniendo el valor del AUC, que resume la capacidad del modelo para discriminar entre compradores y no compradores.
+
+A continuación, se extraen los coeficientes del modelo en el punto lambda.min. Debido a la penalización Lasso, algunos coeficientes se reducen a cero y, por tanto, esas variables se eliminan del modelo. Solo se conservan aquellas que presentan una contribución relevante a la predicción. Ahora se creará un gráfico que muestra únicamente los coeficientes distintos de cero, permitiendo visualizar el sentido y magnitud del efecto de cada variable. Coeficientes positivos indican que un aumento en dicha variable incrementa la probabilidad de compra, mientras que coeficientes negativos la reducen. Este enfoque facilita interpretar cuáles factores son más determinantes en la decisión y refuerza la capacidad del Lasso para realizar selección de variables de manera directa y eficiente.
+
+```{r message=FALSE, warning=FALSE}
+ggplot(coef_plot_filtered, aes(x = term, y = estimate)) +
+  geom_point(aes(color = estimate > 0), size = 3) +
+  geom_segment(aes(x = term, xend = term, y = 0, yend = estimate)) +
   coord_flip() +
   theme_minimal() +
-  labs(title = "Efecto de las variables en la probabilidad de
-       compra",
-       x = "Variables", y = "Coeficiente")
+  scale_color_discrete(name = "Efecto", labels = c("Negativo", "Positivo")) +
+  labs(title = "Efecto de las variables seleccionadas por Lasso",
+       x = "Variables", 
+       y = "Coeficiente (Log-Odds)")
 ```
 
 El modelo de regresión logística muestra que la decisión de compra está influida principalmente por el precio de la vivienda (en su escala logarítmica), el país donde se ubica el inmueble y el nivel de satisfacción del comprador. En particular, se observa que el coeficiente de log_price es negativo y altamente significativo (p-value < 2e-16), lo que indica que, a medida que el precio aumenta, la probabilidad de que el comprador decida adquirir la vivienda disminuye. Este resultado sugiere que la capacidad económica es un factor limitante importante en la decisión.
 
-La variable satisfaction_score presenta un efecto positivo y muy significativo (p-value < 2e-16), implicando que un mayor nivel de satisfacción incrementa considerablemente la probabilidad de compra. Este resultado destaca el papel de la percepción personal y la valoración emocional del inmueble en la toma de decisiones, además de los factores económicos.
+La variable satisfaction_score presenta un efecto positivo y muy significativo, implicando que un mayor nivel de satisfacción incrementa considerablemente la probabilidad de compra. Este resultado destaca el papel de la percepción personal y la valoración emocional del inmueble en la toma de decisiones, además de los factores económicos.
 
 En cuanto al país de residencia, se identifican diferencias significativas entre mercados. Los compradores en Brasil, India, Sudáfrica, Singapur, Emiratos Árabes Unidos y Estados Unidos presentan probabilidades de compra significativamente menores en comparación con el país de referencia (Australia).
 
@@ -487,7 +575,7 @@ Por el contrario, variables relacionadas con las características físicas del i
 
 ## 5.2 Random Forest con GridSearch y Cross-Validation
 
-Vamos a seleccionar las variables relevantes.
+Vamos a seleccionar las variables relevantes y a preparar los datos de igual manera que para la regresión logística.
 
 ```{r message=FALSE, warning=FALSE}
 ml_data <- data %>%
@@ -556,13 +644,40 @@ xgb_model <- train(
 xgb_model <- readRDS("xgb_model_final.rds")
 ```
 
+En este bloque se define y entrena un modelo de clasificación basado en XGBoost utilizando validación cruzada y ajuste de hiperparámetros. La función trainControl() establece una validación cruzada de 5 particiones, calculando probabilidades de clase y empleando el AUC como métrica principal mediante summaryFunction = twoClassSummary, lo que permite evaluar la capacidad discriminativa del modelo. Posteriormente, se construye una rejilla de hiperparámetros que incluye diferentes combinaciones de parámetros. El objetivo de esta búsqueda es encontrar la configuración que maximiza el rendimiento predictivo del modelo evitando sobreajuste.
 
 ```{r message=FALSE, warning=FALSE}
 pred_prob <- predict(xgb_model, newdata = test_x, type = "prob")[, "Si"]
 pred_class <- ifelse(pred_prob > 0.5, "Si", "No")
 
-confusionMatrix(factor(pred_class), test$decision)
+plot_confusion <- function(actual, predicted, title = "Matriz de Confusión") {
+  
+  # Matriz de confusión
+  cm <- confusionMatrix(factor(predicted), factor(actual))
+  
+  # Convertir a tabla para ggplot
+  cm_table <- as.data.frame(cm$table)
+  colnames(cm_table) <- c("Predicción", "Real", "Freq")
+  
+  ggplot(cm_table, aes(x = Real, y = Predicción, fill = Freq)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = Freq), size = 6, color = "black") +
+    scale_fill_gradient(low = "#D6EAF8", high = "#1B4F72") +
+    theme_minimal() +
+    labs(title = title, fill = "Frecuencia") +
+    theme(
+      plot.title = element_text(face = "bold", size = 14),
+      axis.title.x = element_text(face = "bold"),
+      axis.title.y = element_text(face = "bold")
+    )
+}
 
+plot_confusion(test$decision, factor(pred_class), "Resultados en Test Set")
+```
+
+En esta sección se evalúa el desempeño del modelo utilizando el conjunto de test. Primero, se generan probabilidades de pertenencia a la clase “Si” y luego se convierten en predicciones binarias aplicando un umbral de 0.5. Para interpretar los resultados, se construye una matriz de confusión que compara las predicciones con los valores reales. La función plot_confusion() transforma la matriz en un formato visual mediante ggplot2, donde los recuadros indican la cantidad de observaciones clasificadas en cada categoría y la intensidad del color refleja la frecuencia.
+
+```{r message=FALSE, warning=FALSE}
 roc_obj <- roc(test_y, pred_prob)
 
 roc_df <- data.frame(
@@ -577,7 +692,11 @@ ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity)) +
   labs(title = paste("Curva ROC - XGBoost (AUC =", round(auc(roc_obj), 3), ")"),
        x = "1 - Especificidad",
        y = "Sensibilidad")
+```
 
+La curva ROC representa la capacidad del modelo para distinguir entre compradores que toman la decisión de compra ("Si") y aquellos que no ("No"). En el eje vertical se muestra la sensibilidad, mientras que en el eje horizontal se representa 1−especificidad. La línea diagonal punteada corresponde al desempeño de un clasificador aleatorio, por lo que cuanto más alejada esté la curva de esa diagonal y más cerca se encuentre de la esquina superior izquierda, mejor es el desempeño del modelo. El valor del AUC obtenido (AUC = 0.95) indica que el modelo presenta una capacidad predictiva buena, siendo capaz de discriminar entre ambas clases con un nivel de precisión considerable.
+
+```{r message=FALSE, warning=FALSE}
 importance <- xgb.importance(model = xgb_model$finalModel) %>%
   mutate(Feature = reorder(Feature, Gain))
 
@@ -589,6 +708,8 @@ ggplot(importance, aes(x = Feature, y = Gain)) +
        x = "Variable",
        y = "Ganancia (Gain)")
 ```
+
+El gráfico de importancia de variables muestra cuáles características aportan más a las decisiones del modelo. La métrica utilizada es Gain, que representa cuánto mejora la capacidad predictiva del modelo cada variable cuando se usa en los árboles. Las variables situadas en la parte superior del gráfico tienen una contribución mayor, por lo que influyen más en la predicción de la decisión de compra. En cambio, las variables con valores de ganancia menores aportan menos información y tienen un impacto reducido en el resultado final. Este análisis permite identificar que tanto la satisfacción como el ratio emi/salario son más relevantes para explicar el comportamiento de compra.
 
 # 6. Interpretación de resultados
 
